@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────
-// TURBO RUSH 2D — script.js (Versão Moderna com Níveis + Estrutura Multiplayer)
+// TURBO RUSH 2D — script.js (Versão com correção dos botões de nível)
 // ─────────────────────────────────────────────
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -39,20 +39,27 @@ let multiplayer = {
   roomId: null,
   playerId: null,
   otherPlayers: {},
-
   connect: () => { console.log("[Multiplayer] Conectar ao servidor..."); },
   disconnect: () => { console.log("[Multiplayer] Desconectar..."); },
-  sendState: (state) => { /* enviar estado para o servidor */ },
-  receiveState: (data) => { /* receber estado de outros jogadores */ },
+  sendState: (state) => {},
+  receiveState: (data) => {},
 };
 
-// TODO MULTIPLAYER: 
-// - Conexão com servidor (WebSocket / Socket.io)
-// - Sistema de salas
-// - Sincronização de posição dos jogadores
-// - Outros jogadores aparecendo na tela
-// - Chat simples
-// - Ranking global com login
+// ==================== EVENTOS DOS BOTÕES DE NÍVEL (CORRIGIDO) ====================
+function setupLevelButtons() {
+  const levelButtons = document.querySelectorAll('.level-btn');
+  
+  levelButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+      const level = parseInt(this.dataset.level);
+      console.log("✅ Clicou no nível:", level);   // Ajuda a testar
+      startLevel(level);
+    });
+  });
+}
+
+// Chama a função quando a página terminar de carregar
+window.addEventListener('load', setupLevelButtons);
 
 // ── Áudio ─────────────────────────────
 let audioCtx = null;
