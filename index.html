@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🏎️ Turbo Rush 2D</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="game-wrapper">
+    <!-- HUD -->
+    <div id="hud">
+      <div class="hud-block">
+        <span class="hud-label">VELOCIDADE</span>
+        <span class="hud-value" id="speedDisplay">0</span>
+        <span class="hud-unit">km/h</span>
+      </div>
+      <div class="hud-block center">
+        <span class="hud-label">PONTUAÇÃO</span>
+        <span class="hud-value" id="scoreDisplay">0</span>
+      </div>
+      <div class="hud-block right">
+        <span class="hud-label">VIDAS</span>
+        <span class="hud-value" id="livesDisplay">❤️❤️❤️</span>
+      </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- MENU PRINCIPAL -->
+    <div id="overlay" class="active">
+      <div id="menu">
+        <div class="logo-text">TURBO<br/><span>RUSH</span></div>
+        <p class="subtitle">Use as setas ← → para desviar dos carros!</p>
+        
+        <button id="startBtn">▶ INICIAR CORRIDA (Single Player)</button>
+        <button id="multiplayerBtn" class="multiplayer-btn">🌐 MODO MULTIPLAYER (Em breve)</button>
+        
+        <div class="controls-hint">
+          <span>⬅ ➡ Mover</span>
+          <span>⬆ Acelerar</span>
+          <span>⬇ Frear</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TELA DE SELEÇÃO DE NÍVEL -->
+    <div id="levelSelectScreen" class="hidden screen">
+      <div class="level-select-box">
+        <h2>ESCOLHA O NÍVEL</h2>
+        <div class="levels-grid">
+          <button class="level-btn" data-level="1">Nível 1<br><small>Sobreviva 40s</small></button>
+          <button class="level-btn" data-level="2">Nível 2<br><small>Faça 1.500 pontos</small></button>
+          <button class="level-btn" data-level="3">Nível 3<br><small>Sobreviva 55s</small></button>
+          <button class="level-btn" data-level="4">Nível 4<br><small>Faça 2.500 pontos</small></button>
+          <button class="level-btn" data-level="5">Nível 5<br><small>Sobreviva 80s (Difícil)</small></button>
+        </div>
+        <button id="backToMenuBtn" class="secondary-btn">← Voltar ao Menu</button>
+      </div>
+    </div>
+
+    <!-- TELA DE AJUDA / TUTORIAL (F1) -->
+    <div id="helpScreen" class="hidden screen">
+      <div class="help-box">
+        <h2>📖 COMO JOGAR - Turbo Rush 2D</h2>
+        <div class="help-content">
+          <div class="help-section">
+            <h3>Controles</h3>
+            <ul>
+              <li><strong>← →</strong> Mudar de faixa</li>
+              <li><strong>↑</strong> Acelerar</li>
+              <li><strong>↓</strong> Frear</li>
+              <li><strong>F1</strong> Abrir / Fechar esta ajuda</li>
+            </ul>
+          </div>
+          <div class="help-section">
+            <h3>Objetivo</h3>
+            <p>Desvie dos carros inimigos e complete o objetivo de cada nível!</p>
+            <p>Cada nível tem uma meta diferente (tempo ou pontuação).</p>
+          </div>
+          <div class="help-section">
+            <h3>Dicas</h3>
+            <ul>
+              <li>Você tem 3 vidas por nível</li>
+              <li>Quanto mais rápido você vai, mais pontos ganha</li>
+              <li>Evite bater nos carros</li>
+            </ul>
+          </div>
+        </div>
+        <button id="closeHelpBtn" class="secondary-btn">Fechar Ajuda (F1)</button>
+      </div>
+    </div>
+
+    <!-- TELA DE NÍVEL COMPLETO -->
+    <div id="levelCompleteScreen" class="hidden screen">
+      <div class="gameover-box">
+        <h2>🏆 NÍVEL COMPLETO!</h2>
+        <p>Pontuação: <strong id="levelScore">0</strong></p>
+        <p>Tempo: <strong id="levelTime">0</strong>s</p>
+        <button id="nextLevelBtn">Próximo Nível →</button>
+        <button id="backToLevelsBtn" class="secondary-btn">Escolher Outro Nível</button>
+      </div>
+    </div>
+
+    <!-- TELA DE GAME OVER -->
+    <div id="gameOverScreen" class="hidden">
+      <div class="gameover-box">
+        <h2>💥 GAME OVER</h2>
+        <p>Pontuação Final: <strong id="finalScore">0</strong></p>
+        <p>Melhor Pontuação: <strong id="bestScore">0</strong></p>
+        <div id="rankingDisplay"></div>
+        <button id="restartBtn">🔄 JOGAR NOVAMENTE</button>
+        <button id="backToMenuFromGameOver" class="secondary-btn">Menu Principal</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
