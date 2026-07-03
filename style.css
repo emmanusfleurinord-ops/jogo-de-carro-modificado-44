@@ -1,0 +1,356 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600&display=swap');
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+:root {
+  --neon-red: #ff2244;
+  --neon-yellow: #ffe800;
+  --neon-cyan: #00f0ff;
+  --asphalt: #111318;
+  --panel-bg: rgba(0, 0, 0, 0.75);
+  --text-main: #f0f0f0;
+}
+body {
+  background: #0a0b0f;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: 'Rajdhani', sans-serif;
+  overflow: hidden;
+}
+#game-wrapper {
+  position: relative;
+  width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+/* ── HUD ── */
+#hud {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 8px 12px;
+  background: var(--panel-bg);
+  border: 1px solid #ffffff18;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+}
+.hud-block { display: flex; flex-direction: column; align-items: flex-start; }
+.hud-block.center { align-items: center; }
+.hud-block.right { align-items: flex-end; }
+.hud-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #888;
+  text-transform: uppercase;
+}
+.hud-value {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 22px;
+  color: var(--neon-yellow);
+  line-height: 1;
+}
+.hud-unit { font-size: 10px; color: #666; }
+/* ── CANVAS ── */
+#gameCanvas {
+  display: block;
+  border-left: 3px solid #ffffff14;
+  border-right: 3px solid #ffffff14;
+  background: var(--asphalt);
+  image-rendering: pixelated;
+}
+/* ── OVERLAY / MENU ── */
+#overlay {
+  position: absolute;
+  top: 40px;
+  left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.88);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  border-left: 3px solid #ffffff14;
+  border-right: 3px solid #ffffff14;
+}
+#overlay.active { display: flex; }
+#menu { text-align: center; padding: 32px; }
+.logo-text {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 52px;
+  font-weight: 900;
+  color: var(--text-main);
+  line-height: 0.9;
+  letter-spacing: -2px;
+  text-shadow: 0 0 30px var(--neon-red);
+}
+.logo-text span {
+  color: var(--neon-yellow);
+  text-shadow: 0 0 30px var(--neon-yellow);
+}
+.subtitle {
+  margin: 18px 0 28px;
+  color: #aaa;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+button {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 14px 40px;
+  background: var(--neon-red);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: transform 0.1s, box-shadow 0.1s;
+  box-shadow: 0 0 20px var(--neon-red);
+}
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 36px var(--neon-red);
+}
+button:active { transform: scale(0.97); }
+.controls-hint {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 22px;
+  color: #666;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+/* ── GAME OVER ── */
+#gameOverScreen {
+  position: absolute;
+  top: 40px;
+  left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.88);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  border-left: 3px solid #ffffff14;
+  border-right: 3px solid #ffffff14;
+}
+#gameOverScreen.hidden { display: none; }
+.gameover-box { text-align: center; }
+.gameover-box h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 36px;
+  color: var(--neon-red);
+  text-shadow: 0 0 20px var(--neon-red);
+  margin-bottom: 16px;
+}
+.gameover-box p {
+  color: #bbb;
+  font-size: 18px;
+  margin: 6px 0;
+  letter-spacing: 1px;
+}
+.gameover-box strong {
+  color: var(--neon-yellow);
+  font-family: 'Orbitron', sans-serif;
+}
+#restartBtn {
+  margin-top: 28px;
+  background: transparent;
+  border: 2px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  box-shadow: 0 0 20px var(--neon-cyan);
+}
+#restartBtn:hover {
+  background: var(--neon-cyan);
+  color: #000;
+  box-shadow: 0 0 36px var(--neon-cyan);
+}
+
+/* ============================================
+   NOVOS ESTILOS - VERSÃO MODERNA
+   ============================================ */
+
+/* Telas gerais (Level Select, Help, Level Complete) */
+.screen {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  border-left: 3px solid #ffffff14;
+  border-right: 3px solid #ffffff14;
+}
+
+.screen.hidden {
+  display: none;
+}
+
+/* Level Select */
+.level-select-box {
+  text-align: center;
+  padding: 20px;
+}
+
+.level-select-box h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 28px;
+  color: var(--neon-yellow);
+  margin-bottom: 25px;
+  text-shadow: 0 0 15px var(--neon-yellow);
+}
+
+.levels-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.level-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  padding: 18px 10px;
+  background: #1a1f15;
+  color: #fff;
+  border: 2px solid #ffffff30;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1.3;
+}
+
+.level-btn:hover {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  transform: translateY(-3px);
+  box-shadow: 0 0 15px var(--neon-cyan);
+}
+
+.level-btn small {
+  display: block;
+  font-size: 11px;
+  color: #888;
+  margin-top: 6px;
+}
+
+/* Help Screen */
+.help-box {
+  background: #111318;
+  padding: 30px 40px;
+  border-radius: 12px;
+  max-width: 520px;
+  border: 2px solid #ffffff20;
+}
+
+.help-box h2 {
+  font-family: 'Orbitron', sans-serif;
+  color: var(--neon-yellow);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.help-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 25px;
+}
+
+.help-section h3 {
+  color: var(--neon-cyan);
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.help-section ul {
+  padding-left: 20px;
+  color: #ccc;
+  line-height: 1.6;
+}
+
+.help-section p {
+  color: #ccc;
+  line-height: 1.6;
+}
+
+/* Level Complete Screen */
+#levelCompleteScreen h2 {
+  color: #00ff9d;
+  text-shadow: 0 0 20px #00ff9d;
+}
+
+/* Botão secundário */
+.secondary-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  padding: 12px 30px;
+  background: transparent;
+  color: #aaa;
+  border: 2px solid #ffffff40;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: all 0.2s;
+}
+
+.secondary-btn:hover {
+  color: #fff;
+  border-color: #fff;
+}
+
+/* Ranking display */
+#rankingDisplay {
+  margin: 15px 0;
+  padding: 12px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 8px;
+  font-size: 14px;
+  color: #ddd;
+}
+
+#rankingDisplay h4 {
+  color: var(--neon-yellow);
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+#rankingDisplay ol {
+  padding-left: 20px;
+  text-align: left;
+}
+
+#rankingDisplay li {
+  margin: 4px 0;
+}
+
+/* Botão de Multiplayer */
+.multiplayer-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  padding: 12px 30px;
+  background: transparent;
+  color: #00f0ff;
+  border: 2px solid #00f0ff;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: all 0.2s;
+  box-shadow: 0 0 15px #00f0ff;
+}
+
+.multiplayer-btn:hover {
+  background: #00f0ff;
+  color: #000;
+  transform: scale(1.03);
+}
