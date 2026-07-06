@@ -21,7 +21,7 @@
       </div>
       <div class="hud-block right">
         <span class="hud-label">VIDAS</span>
-        <span class="hud-value" id="livesDisplay">❤️❤️❤️</span>
+        <span class="hud-value" id="livesDisplay">❤️❤️❤️❤️❤️</span>
       </div>
     </div>
 
@@ -32,10 +32,8 @@
       <div id="menu">
         <div class="logo-text">TURBO<br/><span>RUSH</span></div>
         <p class="subtitle">Use as setas ← → para desviar dos carros!</p>
-        
         <button id="startBtn">▶ INICIAR CORRIDA (Single Player)</button>
         <button id="multiplayerBtn" class="multiplayer-btn">🌐 MODO MULTIPLAYER (Em breve)</button>
-        
         <div class="controls-hint">
           <span>⬅ ➡ Mover</span>
           <span>⬆ Acelerar</span>
@@ -59,7 +57,7 @@
       </div>
     </div>
 
-    <!-- TELA DE AJUDA / TUTORIAL (F1) -->
+    <!-- TELA DE AJUDA (F1) -->
     <div id="helpScreen" class="hidden screen">
       <div class="help-box">
         <h2>📖 COMO JOGAR - Turbo Rush 2D</h2>
@@ -71,20 +69,12 @@
               <li><strong>↑</strong> Acelerar</li>
               <li><strong>↓</strong> Frear</li>
               <li><strong>F1</strong> Abrir / Fechar esta ajuda</li>
+              <li><strong>P / ESC</strong> Pausar o jogo</li>
             </ul>
           </div>
           <div class="help-section">
             <h3>Objetivo</h3>
             <p>Desvie dos carros inimigos e complete o objetivo de cada nível!</p>
-            <p>Cada nível tem uma meta diferente (tempo ou pontuação).</p>
-          </div>
-          <div class="help-section">
-            <h3>Dicas</h3>
-            <ul>
-              <li>Você tem 3 vidas por nível</li>
-              <li>Quanto mais rápido você vai, mais pontos ganha</li>
-              <li>Evite bater nos carros</li>
-            </ul>
           </div>
         </div>
         <button id="closeHelpBtn" class="secondary-btn">Fechar Ajuda (F1)</button>
@@ -102,7 +92,18 @@
       </div>
     </div>
 
-    <!-- TELA DE GAME OVER -->
+    <!-- TELA DE PAUSA -->
+    <div id="pauseScreen" class="hidden screen">
+      <div class="pause-box">
+        <h2>⏸️ PAUSA</h2>
+        <p>O jogo está pausado</p>
+        <button id="resumeBtn">▶ Continuar Jogo</button>
+        <button id="fullscreenBtn" class="secondary-btn">⛶ Tela Cheia</button>
+        <button id="pauseToMenuBtn" class="secondary-btn">← Menu Principal</button>
+      </div>
+    </div>
+
+    <!-- GAME OVER -->
     <div id="gameOverScreen" class="hidden">
       <div class="gameover-box">
         <h2>💥 GAME OVER</h2>
@@ -114,7 +115,6 @@
       </div>
     </div>
   </div>
-
   <script src="script.js"></script>
 </body>
 </html>
