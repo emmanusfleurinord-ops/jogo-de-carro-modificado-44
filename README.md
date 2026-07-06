@@ -1,25 +1,72 @@
-# jogo-de-carro-modificado-44
 # 🏎️ Turbo Rush 2D
-Jogo de corrida 2D feito com HTML5 Canvas, CSS3 e JavaScript puro — sem frameworks, sem bibliotecas externas.
-![Game Preview](https://img.shields.io/badge/status-funcionando-brightgreen) ![HTML5](https://img.shields.io/badge/HTML5-Canvas-orange) ![CSS3](https://img.shields.io/badge/CSS3-Neon--UI-blue) ![JS](https://img.shields.io/badge/JavaScript-Vanilla-yellow)
+
+Jogo de corrida 2D feito com **HTML5 Canvas**, **CSS3** e **JavaScript puro** — sem frameworks, sem bibliotecas externas.
+
+![Status](https://img.shields.io/badge/status-funcionando-brightgreen)
+![HTML5](https://img.shields.io/badge/HTML5-Canvas-orange)
+![CSS3](https://img.shields.io/badge/CSS3-Neon--UI-blue)
+![JavaScript](https://img.shields.io/badge/JavaScript-Vanilla-yellow)
+
 ---
+
 ## 🎮 Como jogar
-| Tecla | Ação |
-|-------|------|
-| `←` `→` | Mudar de faixa |
-| `↑` | Acelerar |
-| `↓` | Frear |
-Desvie dos carros inimigos. Você tem **3 vidas** — a cada colisão perde uma. A velocidade aumenta com o tempo!
+
+| Tecla          | Ação                              |
+|----------------|-----------------------------------|
+| `←` `→`        | Mudar de faixa                    |
+| `↑`            | Acelerar                          |
+| `↓`            | Frear                             |
+| `P` ou `ESC`   | **Pausar** o jogo                 |
+| `F1`           | Abrir / Fechar o tutorial         |
+
+**Objetivo:** Desvie dos carros inimigos e complete o objetivo de cada nível.  
+Você tem **5 vidas**. A velocidade aumenta conforme você joga!
+
 ---
-## 📁 Estrutura do projeto---
+
+## ✨ Funcionalidades
+
+- ❤️ **5 Vidas** no total
+- 🏎️ Sistema de **5 Níveis** com objetivos claros (tempo ou pontuação)
+- ⏸️ **Sistema de Pausa** (tecla **P** ou **ESC**)
+- ⛶ **Botão de Tela Cheia**
+- 📖 **Tutorial** pressionando **F1**
+- 🏆 **Ranking local** (Top 5 pontuações salvas no navegador)
+- ✨ **Efeitos visuais novos**:
+  - Partículas de escapamento ao acelerar
+  - Speed lines laterais em alta velocidade
+- 💥 Efeito de faíscas na colisão
+- 📈 Dificuldade crescente automática
+- 🎨 Interface neon estilo arcade (fontes Orbitron + Rajdhani)
+
+---
+
+## 📁 Estrutura do projeto
+
+---
+
 ## 🚀 Como rodar
-### Opção 1 — VSCode com Live Server (recomendado)
+
+### Opção recomendada: VSCode + Live Server
 1. Instale a extensão **Live Server** no VSCode
-2. Clique com o botão direito no `index.html`
+2. Clique com botão direito no `index.html`
 3. Selecione **"Open with Live Server"**
 
-### Opção 2 — Direto no navegador
-1. Clone o repositório:
-   ```bash
-   git clone https://github.com/seu-usuario/turbo-rush-2d.git
+### Alternativa
+Abra o arquivo `index.html` diretamente no navegador.
+
 ---
+
+## 🛠️ Tecnologias
+
+- **HTML5 Canvas** — Renderização do jogo
+- **CSS3** — Interface e tema neon
+- **JavaScript Vanilla** — Toda a lógica e física
+- **Web Audio API** — Sons e efeitos
+- **Google Fonts** — Orbitron + Rajdhani
+
+---
+
+## 📝 Licença
+
+Este projeto é livre para uso pessoal e educacional.
