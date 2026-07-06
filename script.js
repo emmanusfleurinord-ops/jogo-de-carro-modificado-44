@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────
-// TURBO RUSH 2D — script.js (Versão Final Limpa e Corrigida)
+// TURBO RUSH 2D — script.js (Versão Final Completa)
 // ─────────────────────────────────────────────
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -17,6 +17,7 @@ const bestScoreEl = document.getElementById('bestScore');
 const levelSelectScreen = document.getElementById('levelSelectScreen');
 const helpScreen = document.getElementById('helpScreen');
 const levelCompleteScreen = document.getElementById('levelCompleteScreen');
+const pauseScreen = document.getElementById('pauseScreen');
 
 document.getElementById('startBtn').addEventListener('click', showLevelSelect);
 document.getElementById('restartBtn').addEventListener('click', restartGame);
@@ -26,36 +27,50 @@ document.getElementById('nextLevelBtn').addEventListener('click', goToNextLevel)
 document.getElementById('backToLevelsBtn').addEventListener('click', showLevelSelect);
 document.getElementById('backToMenuFromGameOver').addEventListener('click', backToMenu);
 
-// Multiplayer button
+// Pause buttons
+document.getElementById('resumeBtn').addEventListener('click', () => {
+  if (state && state.paused) togglePause();
+});
+document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+document.getElementById('pauseToMenuBtn').addEventListener('click', () => {
+  if (state && state.paused) {
+    togglePause();
+  }
+  backToMenu();
+});
+
+// Multiplayer button (placeholder)
 document.getElementById('multiplayerBtn').addEventListener('click', () => {
   alert("🌐 Modo Multiplayer\n\nEsta função está em desenvolvimento.");
 });
 
-// ==================== MULTIPLAYER STRUCTURE ====================
+// =============================================
+// PREPARAÇÃO PARA MULTIPLAYER
+// =============================================
 let multiplayer = {
   enabled: false,
   roomId: null,
   playerId: null,
   otherPlayers: {},
-  connect: () => console.log("[Multiplayer] Connecting..."),
-  disconnect: () => console.log("[Multiplayer] Disconnecting..."),
+  connect: () => console.log("[Multiplayer] Conectar..."),
+  disconnect: () => console.log("[Multiplayer] Desconectar..."),
   sendState: (state) => {},
   receiveState: (data) => {},
 };
 
-// ==================== LEVEL BUTTONS (FIXED) ====================
+// ==================== LEVEL BUTTONS ====================
 function setupLevelButtons() {
   document.querySelectorAll('.level-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const level = parseInt(this.dataset.level);
-      console.log("Clicked level:", level);
+      console.log("Clicou no nível:", level);
       startLevel(level);
     });
   });
 }
 window.addEventListener('load', setupLevelButtons);
 
-// ── Audio ─────────────────────────────
+// ── Áudio ─────────────────────────────
 let audioCtx = null;
 let engineNode = null;
 let engineGain = null;
@@ -157,7 +172,7 @@ function playGameOverSound() {
   });
 }
 
-// ── Constants & State ───────────────────────────────
+// ── Constantes ───────────────────────────────
 const ROAD_LEFT = 80;
 const ROAD_RIGHT = 400;
 const ROAD_W = ROAD_RIGHT - ROAD_LEFT;
@@ -168,6 +183,7 @@ const LANES = [
   ROAD_LEFT + LANE_W * 2.5,
 ];
 
+// ── Níveis ─────────────────────────────
 const LEVELS = {
   1: { goalType: "time", goalValue: 40 },
   2: { goalType: "score", goalValue: 1500 },
@@ -184,10 +200,14 @@ let highScores = JSON.parse(localStorage.getItem('turboRushHighScores')) || [];
 
 function resetState(level = 1) {
   currentLevel = level;
+  const levelData = LEVELS[level];
+  
   return {
     running: false,
+    paused: false,
     score: 0,
-    lives: 3,
+    lives: 5,                    // ← AGORA SÃO 5 VIDAS
+    speed: 3,
     gameSpeed: 3,
     spawnTimer: 0,
     spawnInterval: 90,
@@ -195,6 +215,7 @@ function resetState(level = 1) {
     stripes: [],
     enemies: [],
     sparks: [],
+    exhaust: [],
     player: {
       lane: 1,
       x: LANES[1],
@@ -205,13 +226,13 @@ function resetState(level = 1) {
       targetX: LANES[1],
     },
     keys: { left: false, right: false, up: false, down: false },
-    levelData: LEVELS[level],
+    levelData: levelData,
     levelComplete: false,
-    startTime: Date.now()
+    startTime: Date.now(),
   };
 }
 
-// ── Screen Functions ──────────────────────────
+// ── Funções de Tela ──────────────────────────
 function showLevelSelect() {
   overlay.classList.remove('active');
   levelSelectScreen.classList.remove('hidden');
@@ -226,8 +247,38 @@ function toggleHelp() {
   helpScreen.classList.toggle('hidden');
 }
 
+function togglePause() {
+  if (!state || !state.running) return;
+  state.paused = !state.paused;
+  if (state.paused) {
+    cancelAnimationFrame(animId);
+    pauseScreen.classList.remove('hidden');
+  } else {
+    pauseScreen.classList.add('hidden');
+    loop();
+  }
+}
+
+function toggleFullscreen() {
+  const elem = document.getElementById('game-wrapper');
+  if (!elem) return;
+  if (!document.fullscreenElement) {
+    if (elem.requestFullscreen) elem.requestFullscreen();
+    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+    else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    else if (document.msExitFullscreen) document.msExitFullscreen();
+  }
+}
+
 function startLevel(level) {
   levelSelectScreen.classList.add('hidden');
+  gameOverScreen.classList.add('hidden');
+  levelCompleteScreen.classList.add('hidden');
+  helpScreen.classList.add('hidden');
+  pauseScreen.classList.add('hidden');
   overlay.classList.remove('active');
 
   cancelAnimationFrame(animId);
@@ -241,9 +292,9 @@ function startLevel(level) {
   loop();
 }
 
-// ── Game Loop & Logic ─────────────────────────
+// ── Loop Principal ───────────────────────────
 function loop() {
-  if (!state.running) return;
+  if (!state || !state.running || state.paused) return;
   update(state);
   draw(state);
   animId = requestAnimationFrame(loop);
@@ -259,6 +310,11 @@ function update(s) {
 
   if (s.keys.up && s.gameSpeed < 12) s.gameSpeed += 0.04;
   if (s.keys.down && s.gameSpeed > 1) s.gameSpeed -= 0.06;
+
+  // Efeito de escapamento
+  if (s.keys.up && Math.random() < 0.6) {
+    addExhaust(s, p.x, p.y);
+  }
 
   if (s.keys.left && p.lane > 0 && !p.moving) { p.lane--; p.moving = true; p.targetX = LANES[p.lane]; }
   if (s.keys.right && p.lane < 2 && !p.moving) { p.lane++; p.moving = true; p.targetX = LANES[p.lane]; }
@@ -309,6 +365,13 @@ function update(s) {
   });
   s.sparks = s.sparks.filter(sp => sp.life > 0);
 
+  s.exhaust.forEach(ex => {
+    ex.x += ex.vx;
+    ex.y += ex.vy;
+    ex.life--;
+  });
+  s.exhaust = s.exhaust.filter(ex => ex.life > 0);
+
   speedDisplay.textContent = Math.floor(s.gameSpeed * 18);
   scoreDisplay.textContent = s.score;
   livesDisplay.textContent = '❤️'.repeat(s.lives);
@@ -328,12 +391,17 @@ function checkLevelComplete(s) {
   }
 }
 
-function endGame(s, completed) {
+function endGame(s, levelCompleted) {
   s.running = false;
   stopEngine();
   stopMusic();
 
-  if (completed) {
+  levelCompleteScreen.classList.add('hidden');
+  gameOverScreen.classList.add('hidden');
+  helpScreen.classList.add('hidden');
+  pauseScreen.classList.add('hidden');
+
+  if (levelCompleted) {
     document.getElementById('levelScore').textContent = s.score;
     document.getElementById('levelTime').textContent = Math.floor((Date.now() - s.startTime) / 1000);
     levelCompleteScreen.classList.remove('hidden');
@@ -352,7 +420,7 @@ function endGame(s, completed) {
 function restartGame() { startLevel(currentLevel); }
 function goToNextLevel() { startLevel(currentLevel < 5 ? currentLevel + 1 : 1); }
 
-// ── Drawing ─────────────────────────
+// ── Desenho e Partículas ─────────────────────
 function draw(s) {
   const p = s.player;
   ctx.fillStyle = '#1a1f15';
@@ -362,10 +430,23 @@ function draw(s) {
   ctx.fillRect(ROAD_RIGHT, 0, canvas.width - ROAD_RIGHT, canvas.height);
   ctx.fillStyle = '#1c1e24';
   ctx.fillRect(ROAD_LEFT, 0, ROAD_W, canvas.height);
+
   ctx.strokeStyle = '#ffe800';
   ctx.lineWidth = 4;
   ctx.beginPath(); ctx.moveTo(ROAD_LEFT, 0); ctx.lineTo(ROAD_LEFT, canvas.height); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ROAD_RIGHT, 0); ctx.lineTo(ROAD_RIGHT, canvas.height); ctx.stroke();
+
+  // Speed lines
+  if (s.gameSpeed > 5) {
+    ctx.strokeStyle = '#ffffff60';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 6; i++) {
+      const yPos = ((Date.now() / 20 + i * 40) % (canvas.height + 80)) - 40;
+      ctx.beginPath(); ctx.moveTo(ROAD_LEFT - 15, yPos); ctx.lineTo(ROAD_LEFT - 5, yPos + 25); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ROAD_RIGHT + 5, yPos); ctx.lineTo(ROAD_RIGHT + 15, yPos + 25); ctx.stroke();
+    }
+  }
+
   ctx.strokeStyle = '#ffffff30';
   ctx.lineWidth = 2;
   ctx.setLineDash([30, 30]);
@@ -374,14 +455,29 @@ function draw(s) {
     ctx.beginPath(); ctx.moveTo(ROAD_LEFT + LANE_W * 2, st.y - 30); ctx.lineTo(ROAD_LEFT + LANE_W * 2, st.y); ctx.stroke();
   });
   ctx.setLineDash([]);
+
   s.enemies.forEach(e => drawCar(e.x, e.y, e.w, e.h, e.color, false));
+
+  // Escapamento
+  s.exhaust.forEach(ex => {
+    const alpha = ex.life / ex.maxLife;
+    ctx.globalAlpha = alpha * 0.6;
+    ctx.fillStyle = '#aaaaaa';
+    ctx.beginPath();
+    ctx.arc(ex.x, ex.y, ex.size * alpha, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
   const visible = s.invincible === 0 || Math.floor(s.invincible / 6) % 2 === 0;
   if (visible) drawCar(p.x, p.y, p.w, p.h, '#00f0ff', true);
+
   s.sparks.forEach(sp => {
-    ctx.globalAlpha = sp.life / sp.maxLife;
+    const alpha = sp.life / sp.maxLife;
+    ctx.globalAlpha = alpha;
     ctx.fillStyle = sp.color;
     ctx.beginPath();
-    ctx.arc(sp.x, sp.y, 3 * ctx.globalAlpha, 0, Math.PI * 2);
+    ctx.arc(sp.x, sp.y, 3 * alpha, 0, Math.PI * 2);
     ctx.fill();
   });
   ctx.globalAlpha = 1;
@@ -436,10 +532,10 @@ function roundRect(x, y, w, h, r) {
 function rectsOverlap(a, b) {
   const p = 6;
   return (
-    a.x - a.w / 2 + p < b.x + b.w / 2 - p &&
-    a.x + a.w / 2 - p > b.x - b.w / 2 + p &&
-    a.y - a.h / 2 + p < b.y + b.h / 2 - p &&
-    a.y + a.h / 2 - p > b.y - b.h / 2 + p
+    a.x - a.w/2 + p < b.x + b.w/2 - p &&
+    a.x + a.w/2 - p > b.x - b.w/2 + p &&
+    a.y - a.h/2 + p < b.y + b.h/2 - p &&
+    a.y + a.h/2 - p > b.y - b.h/2 + p
   );
 }
 
@@ -450,7 +546,7 @@ function initStripes(s) {
   }
 }
 
-const ENEMY_COLORS = ['#e63946', '#f4a261', '#2ec4b6', '#a8dadc', '#ffbe0b', '#8338ec', '#fb5607'];
+const ENEMY_COLORS = ['#e63946','#f4a261','#2ec4b6','#a8dadc','#ffbe0b','#8338ec','#fb5607'];
 function randColor() {
   return ENEMY_COLORS[Math.floor(Math.random() * ENEMY_COLORS.length)];
 }
@@ -464,7 +560,7 @@ function spawnEnemy(s) {
     h: 64,
     lane,
     color: randColor(),
-    speed: s.gameSpeed * (0.7 + Math.random() * 0.5)
+    speed: s.gameSpeed * (0.7 + Math.random() * 0.5),
   });
 }
 
@@ -478,20 +574,42 @@ function addSparks(s, x, y) {
       vy: Math.sin(angle) * vel,
       life: 30 + Math.random() * 20,
       maxLife: 50,
-      color: ['#ffe800', '#ff6600', '#ff2244'][Math.floor(Math.random() * 3)]
+      color: ['#ffe800','#ff6600','#ff2244'][Math.floor(Math.random()*3)],
     });
   }
 }
 
-// ── Input ─────────────────────────
+function addExhaust(s, x, y) {
+  for (let i = 0; i < 3; i++) {
+    s.exhaust.push({
+      x: x + (Math.random() - 0.5) * 8,
+      y: y + 25 + Math.random() * 5,
+      vx: (Math.random() - 0.5) * 0.8,
+      vy: 1.5 + Math.random() * 0.8,
+      life: 20 + Math.random() * 15,
+      maxLife: 35,
+      size: 2 + Math.random() * 2,
+    });
+  }
+}
+
+// ── Input ────────────────────────────────────
 window.addEventListener('keydown', e => {
   if (e.key === 'F1') {
     e.preventDefault();
     toggleHelp();
     return;
   }
-  if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) e.preventDefault();
-  if (!state.running) return;
+  if (e.key.toLowerCase() === 'p' || e.key === 'Escape') {
+    e.preventDefault();
+    togglePause();
+    return;
+  }
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) {
+    e.preventDefault();
+  }
+  if (!state || !state.running || state.paused) return;
+
   if (e.key === 'ArrowLeft') state.keys.left = true;
   if (e.key === 'ArrowRight') state.keys.right = true;
   if (e.key === 'ArrowUp') state.keys.up = true;
@@ -499,6 +617,7 @@ window.addEventListener('keydown', e => {
 });
 
 window.addEventListener('keyup', e => {
+  if (!state) return;
   if (e.key === 'ArrowLeft') state.keys.left = false;
   if (e.key === 'ArrowRight') state.keys.right = false;
   if (e.key === 'ArrowUp') state.keys.up = false;
@@ -521,8 +640,8 @@ function displayRanking() {
     return;
   }
   let html = "<h4>🏆 MELHORES PONTUAÇÕES</h4><ol>";
-  highScores.forEach((score, i) => {
-    html += `<li>${i + 1}. ${score} pontos</li>`;
+  highScores.forEach((score, index) => {
+    html += `<li>${index + 1}. ${score} pontos</li>`;
   });
   html += "</ol>";
   container.innerHTML = html;
