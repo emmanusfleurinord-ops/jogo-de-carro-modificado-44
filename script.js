@@ -1,12 +1,11 @@
 // ─────────────────────────────────────────────
-// TURBO RUSH 2D — script.js (Versão Final Completa)
+// TURBO RUSH 2D — script.js (Versão Final com Pausa Corrigida)
 // ─────────────────────────────────────────────
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 canvas.width = 480;
 canvas.height = 620;
 
-// ── Elementos da UI ──────────────────────────
 const speedDisplay = document.getElementById('speedDisplay');
 const scoreDisplay = document.getElementById('scoreDisplay');
 const livesDisplay = document.getElementById('livesDisplay');
@@ -27,26 +26,19 @@ document.getElementById('nextLevelBtn').addEventListener('click', goToNextLevel)
 document.getElementById('backToLevelsBtn').addEventListener('click', showLevelSelect);
 document.getElementById('backToMenuFromGameOver').addEventListener('click', backToMenu);
 
-// Pause buttons
 document.getElementById('resumeBtn').addEventListener('click', () => {
   if (state && state.paused) togglePause();
 });
 document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
 document.getElementById('pauseToMenuBtn').addEventListener('click', () => {
-  if (state && state.paused) {
-    togglePause();
-  }
+  if (state && state.paused) togglePause();
   backToMenu();
 });
 
-// Multiplayer button (placeholder)
 document.getElementById('multiplayerBtn').addEventListener('click', () => {
   alert("🌐 Modo Multiplayer\n\nEsta função está em desenvolvimento.");
 });
 
-// =============================================
-// PREPARAÇÃO PARA MULTIPLAYER
-// =============================================
 let multiplayer = {
   enabled: false,
   roomId: null,
@@ -58,19 +50,16 @@ let multiplayer = {
   receiveState: (data) => {},
 };
 
-// ==================== LEVEL BUTTONS ====================
 function setupLevelButtons() {
   document.querySelectorAll('.level-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const level = parseInt(this.dataset.level);
-      console.log("Clicou no nível:", level);
       startLevel(level);
     });
   });
 }
 window.addEventListener('load', setupLevelButtons);
 
-// ── Áudio ─────────────────────────────
 let audioCtx = null;
 let engineNode = null;
 let engineGain = null;
@@ -172,7 +161,6 @@ function playGameOverSound() {
   });
 }
 
-// ── Constantes ───────────────────────────────
 const ROAD_LEFT = 80;
 const ROAD_RIGHT = 400;
 const ROAD_W = ROAD_RIGHT - ROAD_LEFT;
@@ -183,7 +171,6 @@ const LANES = [
   ROAD_LEFT + LANE_W * 2.5,
 ];
 
-// ── Níveis ─────────────────────────────
 const LEVELS = {
   1: { goalType: "time", goalValue: 40 },
   2: { goalType: "score", goalValue: 1500 },
@@ -201,12 +188,11 @@ let highScores = JSON.parse(localStorage.getItem('turboRushHighScores')) || [];
 function resetState(level = 1) {
   currentLevel = level;
   const levelData = LEVELS[level];
-  
   return {
     running: false,
     paused: false,
     score: 0,
-    lives: 5,                    // ← AGORA SÃO 5 VIDAS
+    lives: 5,
     speed: 3,
     gameSpeed: 3,
     spawnTimer: 0,
@@ -232,7 +218,6 @@ function resetState(level = 1) {
   };
 }
 
-// ── Funções de Tela ──────────────────────────
 function showLevelSelect() {
   overlay.classList.remove('active');
   levelSelectScreen.classList.remove('hidden');
@@ -249,12 +234,19 @@ function toggleHelp() {
 
 function togglePause() {
   if (!state || !state.running) return;
+
   state.paused = !state.paused;
+
   if (state.paused) {
     cancelAnimationFrame(animId);
+    state.keys = { left: false, right: false, up: false, down: false };
+    stopEngine();
+    stopMusic();
     pauseScreen.classList.remove('hidden');
   } else {
     pauseScreen.classList.add('hidden');
+    startEngine();
+    startMusic();
     loop();
   }
 }
@@ -292,7 +284,6 @@ function startLevel(level) {
   loop();
 }
 
-// ── Loop Principal ───────────────────────────
 function loop() {
   if (!state || !state.running || state.paused) return;
   update(state);
@@ -311,7 +302,6 @@ function update(s) {
   if (s.keys.up && s.gameSpeed < 12) s.gameSpeed += 0.04;
   if (s.keys.down && s.gameSpeed > 1) s.gameSpeed -= 0.06;
 
-  // Efeito de escapamento
   if (s.keys.up && Math.random() < 0.6) {
     addExhaust(s, p.x, p.y);
   }
@@ -420,7 +410,6 @@ function endGame(s, levelCompleted) {
 function restartGame() { startLevel(currentLevel); }
 function goToNextLevel() { startLevel(currentLevel < 5 ? currentLevel + 1 : 1); }
 
-// ── Desenho e Partículas ─────────────────────
 function draw(s) {
   const p = s.player;
   ctx.fillStyle = '#1a1f15';
@@ -436,7 +425,6 @@ function draw(s) {
   ctx.beginPath(); ctx.moveTo(ROAD_LEFT, 0); ctx.lineTo(ROAD_LEFT, canvas.height); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(ROAD_RIGHT, 0); ctx.lineTo(ROAD_RIGHT, canvas.height); ctx.stroke();
 
-  // Speed lines
   if (s.gameSpeed > 5) {
     ctx.strokeStyle = '#ffffff60';
     ctx.lineWidth = 2;
@@ -458,7 +446,6 @@ function draw(s) {
 
   s.enemies.forEach(e => drawCar(e.x, e.y, e.w, e.h, e.color, false));
 
-  // Escapamento
   s.exhaust.forEach(ex => {
     const alpha = ex.life / ex.maxLife;
     ctx.globalAlpha = alpha * 0.6;
@@ -593,7 +580,6 @@ function addExhaust(s, x, y) {
   }
 }
 
-// ── Input ────────────────────────────────────
 window.addEventListener('keydown', e => {
   if (e.key === 'F1') {
     e.preventDefault();
@@ -624,7 +610,6 @@ window.addEventListener('keyup', e => {
   if (e.key === 'ArrowDown') state.keys.down = false;
 });
 
-// ── Ranking ─────────────────────────
 function saveScore(score) {
   highScores.push(score);
   highScores.sort((a, b) => b - a);
