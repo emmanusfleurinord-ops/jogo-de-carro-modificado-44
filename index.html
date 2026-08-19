@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🏎️ Turbo Rush 2D</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    :root {
+      --neon-red: #ff2244;
+      --neon-yellow: #ffe800;
+      --neon-cyan: #00f0ff;
+      --asphalt: #111318;
+      --panel-bg: rgba(0, 0, 0, 0.75);
+      --text-main: #f0f0f0;
+    }
+    body {
+      background:
+        radial-gradient(ellipse at 20% 80%, #1a0830 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, #0a2035 0%, transparent 50%),
+        linear-gradient(180deg, #07060c 0%, #0d1020 50%, #0a0b0f 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Rajdhani', sans-serif;
+      overflow: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 10% 20%, #00f0ff55 0, transparent 2px),
+        radial-gradient(1px 1px at 30% 70%, #ffe80044 0, transparent 2px),
+        radial-gradient(1px 1px at 70% 30%, #ff224444 0, transparent 2px),
+        radial-gradient(1px 1px at 85% 80%, #00f0ff44 0, transparent 2px),
+        radial-gradient(1px 1px at 50% 50%, #ffffff22 0, transparent 2px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    #game-wrapper {
+      position: relative;
+      width: min(620px, 96vw);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 1;
+      box-shadow: 0 0 80px rgba(0, 240, 255, 0.12), 0 20px 60px rgba(0,0,0,0.7);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    /* HUD */
+    #hud {
+      width: 100%;
+      display: none;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 10px 16px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.88), rgba(0,0,0,0.65));
+      border: 1px solid #ffffff18;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+    }
+    #hud.visible { display: flex; }
+    .hud-block { display: flex; flex-direction: column; align-items: flex-start; }
+    .hud-block.center { align-items: center; }
+    .hud-block.right { align-items: flex-end; }
+    .hud-label {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #aaa;
+      text-transform: uppercase;
+    }
+    .hud-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 26px;
+      color: var(--neon-yellow);
+      line-height: 1.1;
+    }
+    .hud-unit { font-size: 12px; color: #777; }
+    /* CANVAS */
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      max-height: 82vh;
+      border-left: 3px solid #ffffff14;
+      border-right: 3px solid #ffffff14;
+      background: var(--asphalt);
+    }
+    /* OVERLAY / MENU */
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0; right: 0; bottom: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.72), rgba(8,10,20,0.92));
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+    #overlay.active { display: flex; }
+    #menu { text-align: center; padding: 28px 22px; }
+    .logo-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 62px;
+      font-weight: 900;
+      color: var(--text-main);
+      line-height: 0.9;
+      letter-spacing: -2px;
+      text-shadow: 0 0 30px var(--neon-red);
+      animation: logoPulse 2.4s ease-in-out infinite;
+    }
+    .logo-text span {
+      color: var(--neon-yellow);
+      text-shadow: 0 0 30px var(--neon-yellow);
+      animation: logoPulseY 2.4s ease-in-out infinite;
+    }
+    @keyframes logoPulse {
+      0%, 100% { text-shadow: 0 0 16px var(--neon-red); }
+      50% { text-shadow: 0 0 42px var(--neon-red), 0 0 80px #ff224466; }
+    }
+    @keyframes logoPulseY {
+      0%, 100% { text-shadow: 0 0 16px var(--neon-yellow); }
+      50% { text-shadow: 0 0 42px var(--neon-yellow), 0 0 80px #ffe80066; }
+    }
+    .subtitle {
+      margin: 16px 0 24px;
+      color: #ccc;
+      font-size: 16px;
+      letter-spacing: 1px;
+    }
+    button {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 16px 28px;
+      width: 100%;
+      max-width: 420px;
+      background: var(--neon-red);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      transition: transform 0.1s, box-shadow 0.1s;
+      box-shadow: 0 0 20px var(--neon-red);
+      animation: btnGlow 2s ease-in-out infinite;
+    }
+    @keyframes btnGlow {
+      0%, 100% { box-shadow: 0 0 16px var(--neon-red); }
+      50% { box-shadow: 0 0 32px var(--neon-red), 0 0 50px #ff224455; }
+    }
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 36px var(--neon-red);
+    }
+    button:active { transform: scale(0.97); }
+    .controls-hint {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 22px;
+      color: #666;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+    /* GAME OVER */
+    #gameOverScreen {
+      position: absolute;
+      top: 0;
+      left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.88);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      border-left: 3px solid #ffffff14;
+      border-right: 3px solid #ffffff14;
+    }
+    #gameOverScreen.hidden { display: none; }
+    .gameover-box { text-align: center; }
+    .gameover-box h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 36px;
+      color: var(--neon-red);
+      text-shadow: 0 0 20px var(--neon-red);
+      margin-bottom: 16px;
+    }
+    .gameover-box p {
+      color: #bbb;
+      font-size: 18px;
+      margin: 6px 0;
+      letter-spacing: 1px;
+    }
+    .gameover-box strong {
+      color: var(--neon-yellow);
+      font-family: 'Orbitron', sans-serif;
+    }
+    #restartBtn {
+      margin-top: 28px;
+      background: transparent;
+      border: 2px solid var(--neon-cyan);
+      color: var(--neon-cyan);
+      box-shadow: 0 0 20px var(--neon-cyan);
+    }
+    #restartBtn:hover {
+      background: var(--neon-cyan);
+      color: #000;
+      box-shadow: 0 0 36px var(--neon-cyan);
+    }
+    /* Telas gerais */
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.92);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      border-left: 3px solid #ffffff14;
+      border-right: 3px solid #ffffff14;
+    }
+    .screen.hidden { display: none; }
+    /* Level Select */
+    .level-select-box { 
+      text-align: center; 
+      padding: 15px 10px;
+      width: 100%;
+      max-height: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .level-select-box h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 24px;
+      color: var(--neon-yellow);
+      margin-bottom: 12px;
+      text-shadow: 0 0 15px var(--neon-yellow);
+      flex-shrink: 0;
+    }
+    .levels-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 15px;
+      overflow-y: auto;
+      max-height: 420px;
+      padding: 5px 4px;
+      scrollbar-width: thin;
+      scrollbar-color: #00f0ff #1a1f15;
+    }
+    .levels-grid::-webkit-scrollbar {
+      width: 6px;
+    }
+    .levels-grid::-webkit-scrollbar-track {
+      background: #1a1f15;
+    }
+    .levels-grid::-webkit-scrollbar-thumb {
+      background: #00f0ff;
+      border-radius: 3px;
+    }
+    .level-btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      padding: 11px 4px;
+      background: linear-gradient(180deg, #1e2420 0%, #151a16 100%);
+      color: #fff;
+      border: 2px solid #ffffff28;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      line-height: 1.25;
+      min-height: 60px;
+      position: relative;
+    }
+    .level-btn:hover {
+      border-color: var(--neon-cyan);
+      color: var(--neon-cyan);
+      transform: translateY(-3px);
+      box-shadow: 0 4px 16px rgba(0, 240, 255, 0.35);
+      background: linear-gradient(180deg, #222a26 0%, #1a201c 100%);
+    }
+    .level-btn small {
+      display: block;
+      font-size: 9px;
+      color: #999;
+      margin-top: 5px;
+      line-height: 1.2;
+    }
+    .level-btn.hard {
+      border-color: #ff2244aa;
+      background: linear-gradient(180deg, #2a1518 0%, #1a0f11 100%);
+    }
+    .level-btn.hard:hover {
+      border-color: #ff2244;
+      color: #ff6b81;
+      box-shadow: 0 4px 18px rgba(255, 34, 68, 0.45);
+    }
+    .level-btn.hard small {
+      color: #ff8a9a;
+    }
+    /* Help Screen */
+    .help-box {
+      background: #111318;
+      padding: 30px 40px;
+      border-radius: 12px;
+      max-width: 520px;
+      border: 2px solid #ffffff20;
+    }
+    .help-box h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: var(--neon-yellow);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .help-content {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-bottom: 25px;
+    }
+    .help-section h3 {
+      color: var(--neon-cyan);
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+    .help-section ul {
+      padding-left: 20px;
+      color: #ccc;
+      line-height: 1.6;
+    }
+    .help-section p {
+      color: #ccc;
+      line-height: 1.6;
+    }
+    /* Level Complete */
+    #levelCompleteScreen h2 {
+      color: #00ff9d;
+      text-shadow: 0 0 20px #00ff9d;
+    }
+    /* Secondary Button */
+    .secondary-btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14px;
+      padding: 12px 30px;
+      background: transparent;
+      color: #aaa;
+      border: 2px solid #ffffff40;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: all 0.2s;
+    }
+    .secondary-btn:hover {
+      color: #fff;
+      border-color: #fff;
+    }
+    /* Ranking */
+    #rankingDisplay {
+      margin: 15px 0;
+      padding: 12px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 8px;
+      font-size: 14px;
+      color: #ddd;
+    }
+    #rankingDisplay h4 {
+      color: var(--neon-yellow);
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+    #rankingDisplay ol {
+      padding-left: 20px;
+      text-align: left;
+    }
+    #rankingDisplay li {
+      margin: 4px 0;
+    }
+    /* Multiplayer Button */
+    .multiplayer-btn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14px;
+      padding: 12px 30px;
+      background: transparent;
+      color: #00f0ff;
+      border: 2px solid #00f0ff;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: all 0.2s;
+      box-shadow: 0 0 15px #00f0ff;
+    }
+    .multiplayer-btn:hover {
+      background: #00f0ff;
+      color: #000;
+      transform: scale(1.03);
+    }
+    /* Pause Screen */
+    .pause-box {
+      background: #111318;
+      padding: 40px 50px;
+      border-radius: 16px;
+      text-align: center;
+      border: 2px solid #ffffff20;
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+    }
+    .pause-box h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: var(--neon-cyan);
+      font-size: 42px;
+      margin-bottom: 10px;
+      text-shadow: 0 0 20px var(--neon-cyan);
+    }
+    .pause-box p {
+      color: #aaa;
+      margin-bottom: 25px;
+      font-size: 18px;
+    }
+    #resumeBtn {
+      background: var(--neon-cyan);
+      color: #000;
+      border: none;
+      font-weight: bold;
+      box-shadow: 0 0 20px var(--neon-cyan);
+    }
+    #resumeBtn:hover {
+      background: #fff;
+      box-shadow: 0 0 40px var(--neon-cyan);
+    }
+  </style>
+</head>
+<body>
+  <div id="game-wrapper">
+    <div id="hud">
+      <div class="hud-block">
+        <span class="hud-label">⚡ VELOCIDADE</span>
+        <span class="hud-value" id="speedDisplay">0</span>
+        <span class="hud-unit">km/h</span>
+      </div>
+      <div class="hud-block center">
+        <span class="hud-label">🏆 PONTUAÇÃO</span>
+        <span class="hud-value" id="scoreDisplay">0</span>
+      </div>
+      <div class="hud-block right">
+        <span class="hud-label">VIDAS</span>
+        <span class="hud-value" id="livesDisplay">❤️❤️❤️❤️❤️</span>
+      </div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- MENU PRINCIPAL -->
+    <div id="overlay" class="active">
+      <div id="menu">
+        <div class="logo-text">TURBO<br/><span>RUSH</span></div>
+        <p class="subtitle">Toque no botão e desvie dos carros</p>
+        <button id="quickPlayBtn">▶ JOGAR AGORA</button>
+        <button id="startBtn" class="secondary-btn" style="margin-top:10px;">ESCOLHER NÍVEL</button>
+        <button id="multiplayerBtn" class="multiplayer-btn">2 JOGADORES + CONTROLE</button>
+        <div class="controls-hint" style="flex-wrap:wrap;font-size:14px;color:#aaa;">
+          <span>⬅ ➡ Mudar faixa</span>
+          <span>⬆ Acelerar</span>
+          <span>⬇ Frear</span>
+        </div>
+        <p style="margin-top:10px;color:#777;font-size:13px;">Controle: stick ou L1 / R1</p>
+        <p id="expoCredit" style="margin-top:18px;color:#555;font-size:12px;letter-spacing:1px;">
+          Emmanuel Fleurinord · Turbo Rush 2D
+        </p>
+        <button id="muteBtn" class="secondary-btn" style="margin-top:10px;padding:10px 16px;font-size:12px;width:auto;">🔊 SOM: LIGADO</button>
+      </div>
+    </div>
+
+    <!-- TELA DE SELEÇÃO DE NÍVEL -->
+    <div id="levelSelectScreen" class="hidden screen">
+      <div class="level-select-box">
+        <h2>ESCOLHA O NÍVEL (1-100)</h2>
+        <div class="levels-grid" id="levelsGrid">
+          <!-- Botões gerados dinamicamente -->
+        </div>
+        <button id="backToMenuBtn" class="secondary-btn">← Voltar ao Menu</button>
+      </div>
+    </div>
+
+    <!-- TELA DE AJUDA (F1) -->
+    <div id="helpScreen" class="hidden screen">
+      <div class="help-box">
+        <h2>📖 COMO JOGAR - Turbo Rush 2D</h2>
+        <div class="help-content">
+          <div class="help-section">
+            <h3>Controles</h3>
+            <ul>
+              <li><strong>← →</strong> Mudar de faixa (ativa as setas do carro)</li>
+              <li><strong>↑</strong> Acelerar</li>
+              <li><strong>↓</strong> Frear</li>
+              <li><strong>F1</strong> Abrir / Fechar esta ajuda</li>
+              <li><strong>P / ESC</strong> Pausar o jogo</li>
+            </ul>
+          </div>
+          <div class="help-section">
+            <h3>Objetivo</h3>
+            <p>Desvie dos carros inimigos e complete o objetivo de cada nível!</p>
+            <p>O carro agora tem faróis e setas de direção realistas!</p>
+          </div>
+        </div>
+        <button id="closeHelpBtn" class="secondary-btn">Fechar Ajuda (F1)</button>
+      </div>
+    </div>
+
+    <!-- TELA DE NÍVEL COMPLETO -->
+    <div id="levelCompleteScreen" class="hidden screen">
+      <div class="gameover-box">
+        <h2>🏆 NÍVEL COMPLETO!</h2>
+        <p>Pontuação: <strong id="levelScore">0</strong></p>
+        <p>Tempo: <strong id="levelTime">0</strong>s</p>
+        <button id="nextLevelBtn">Próximo Nível →</button>
+        <button id="backToLevelsBtn" class="secondary-btn">Escolher Outro Nível</button>
+      </div>
+    </div>
+
+    <!-- TELA DE PAUSA -->
+    <div id="pauseScreen" class="hidden screen">
+      <div class="pause-box">
+        <h2>⏸️ PAUSA</h2>
+        <p>O jogo está pausado</p>
+        <button id="resumeBtn">▶ Continuar Jogo</button>
+        <button id="fullscreenBtn" class="secondary-btn">⛶ Tela Cheia</button>
+        <button id="pauseToMenuBtn" class="secondary-btn">← Menu Principal</button>
+      </div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div id="gameOverScreen" class="hidden">
+      <div class="gameover-box">
+        <h2>💥 GAME OVER</h2>
+        <p id="goPlayerName" style="color:#00f0ff;font-size:20px;margin-bottom:8px;"></p>
+        <p>Pontuação Final: <strong id="finalScore">0</strong></p>
+        <p>Melhor Pontuação: <strong id="bestScore">0</strong></p>
+        <div id="rankingDisplay"></div>
+        <p style="color:#888;font-size:13px;margin-top:8px;">Voltando ao menu em 20 segundos</p>
+        <button id="restartBtn">🔄 JOGAR NOVAMENTE</button>
+        <button id="backToMenuFromGameOver" class="secondary-btn">Menu Principal</button>
+      </div>
+    </div>
+
+    <!-- MULTIPLAYER LOCAL - NOMES -->
+    <div id="multiplayerScreen" class="hidden screen">
+      <div class="pause-box" style="max-width: 400px;">
+        <h2 style="color: #00f0ff; font-size: 28px; margin-bottom: 8px;">🌐 MULTIPLAYER LOCAL</h2>
+        <p style="color: #aaa; font-size: 14px; margin-bottom: 22px;">2 jogadores no mesmo computador</p>
+
+        <div style="text-align: left; margin-bottom: 16px;">
+          <label style="color: #00f0ff; font-size: 13px; display: block; margin-bottom: 4px;">Jogador 1 (Setas / Controle 1)</label>
+          <input id="nameP1" type="text" maxlength="12" placeholder="Nome do Jogador 1" value="Jogador 1"
+            style="width: 100%; padding: 10px 12px; border-radius: 6px; border: 2px solid #00f0ff55; background: #111; color: #fff; font-size: 16px; outline: none;">
+        </div>
+
+        <div style="text-align: left; margin-bottom: 22px;">
+          <label style="color: #ff6b35; font-size: 13px; display: block; margin-bottom: 4px;">Jogador 2 (WASD / Controle 2)</label>
+          <input id="nameP2" type="text" maxlength="12" placeholder="Nome do Jogador 2" value="Jogador 2"
+            style="width: 100%; padding: 10px 12px; border-radius: 6px; border: 2px solid #ff6b3555; background: #111; color: #fff; font-size: 16px; outline: none;">
+        </div>
+
+        <p style="color: #666; font-size: 12px; margin-bottom: 18px; line-height: 1.4;">
+          Controles: <b>P1</b> = Setas &nbsp;|&nbsp; <b>P2</b> = WASD<br>
+          Também funciona com controles de videogame
+        </p>
+
+        <button id="startMultiplayerBtn" style="width: 100%; margin-bottom: 10px;">▶ INICIAR CORRIDA</button>
+        <button id="closeMultiplayerBtn" class="secondary-btn" style="width: 100%;">← Voltar ao Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+// ─────────────────────────────────────────────
+// TURBO RUSH 2D — Versão Melhorada
+// Faróis realistas + Setas de direção + Som de motor melhorado
+// ─────────────────────────────────────────────
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = 560;
+canvas.height = 760;
+const hudEl = document.getElementById('hud');
+function showHUD() { if (hudEl) hudEl.classList.add('visible'); }
+function hideHUD() { if (hudEl) hudEl.classList.remove('visible'); }
+
+const speedDisplay = document.getElementById('speedDisplay');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const livesDisplay = document.getElementById('livesDisplay');
+const overlay = document.getElementById('overlay');
+const gameOverScreen = document.getElementById('gameOverScreen');
+const finalScoreEl = document.getElementById('finalScore');
+const bestScoreEl = document.getElementById('bestScore');
+const levelSelectScreen = document.getElementById('levelSelectScreen');
+const helpScreen = document.getElementById('helpScreen');
+const levelCompleteScreen = document.getElementById('levelCompleteScreen');
+const pauseScreen = document.getElementById('pauseScreen');
+
+document.getElementById('startBtn').addEventListener('click', showLevelSelect);
+document.getElementById('quickPlayBtn').addEventListener('click', () => startLevel(1));
+document.getElementById('restartBtn').addEventListener('click', restartGame);
+
+let soundMuted = false;
+let expoReturnTimer = null;
+document.getElementById('muteBtn').addEventListener('click', () => {
+  soundMuted = !soundMuted;
+  document.getElementById('muteBtn').textContent = soundMuted ? '🔇 SOM: DESLIGADO' : '🔊 SOM: LIGADO';
+  if (soundMuted) {
+    stopEngine();
+    stopMusic();
+  } else if (state && state.running && !state.paused) {
+    startEngine();
+    startMusic();
+  }
+});
+document.getElementById('backToMenuBtn').addEventListener('click', backToMenu);
+document.getElementById('closeHelpBtn').addEventListener('click', toggleHelp);
+document.getElementById('nextLevelBtn').addEventListener('click', goToNextLevel);
+document.getElementById('backToLevelsBtn').addEventListener('click', showLevelSelect);
+document.getElementById('backToMenuFromGameOver').addEventListener('click', backToMenu);
+document.getElementById('resumeBtn').addEventListener('click', () => {
+  if (state && state.paused) togglePause();
+});
+document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+document.getElementById('pauseToMenuBtn').addEventListener('click', () => {
+  backToMenu();
+});
+const multiplayerScreen = document.getElementById('multiplayerScreen');
+document.getElementById('multiplayerBtn').addEventListener('click', () => {
+  overlay.classList.remove('active');
+  multiplayerScreen.classList.remove('hidden');
+  // Foca no primeiro input
+  setTimeout(() => {
+    const input = document.getElementById('nameP1');
+    if (input) input.focus();
+  }, 100);
+});
+document.getElementById('closeMultiplayerBtn').addEventListener('click', () => {
+  multiplayerScreen.classList.add('hidden');
+  overlay.classList.add('active');
+});
+document.getElementById('startMultiplayerBtn').addEventListener('click', () => {
+  const name1 = (document.getElementById('nameP1').value || 'Jogador 1').trim().substring(0, 12);
+  const name2 = (document.getElementById('nameP2').value || 'Jogador 2').trim().substring(0, 12);
+  startMultiplayer(name1, name2);
+});
+
+function setupLevelButtons() {
+  const grid = document.getElementById('levelsGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  for (let i = 1; i <= TOTAL_LEVELS; i++) {
+    const level = LEVELS[i];
+    const btn = document.createElement('button');
+    btn.className = 'level-btn' + (level.hard ? ' hard' : '');
+    btn.dataset.level = i;
+    btn.innerHTML = `Nível ${i}<br><small>${level.desc}</small>`;
+    btn.addEventListener('click', function() {
+      startLevel(parseInt(this.dataset.level));
+    });
+    grid.appendChild(btn);
+  }
+}
+window.addEventListener('load', setupLevelButtons);
+
+// ================== ÁUDIO MELHORADO (Motor realista) ==================
+let audioCtx = null;
+let engineOsc1 = null;
+let engineOsc2 = null;
+let engineOsc3 = null;
+let engineGain = null;
+let engineFilter = null;
+let currentRPM = 0.2;           // 0.0 a 1.0 (virtual)
+let melodyTimer = null;
+let melodyIndex = 0;
+const MELODY = [220, 247, 262, 294, 330, 294, 262, 247];
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function startEngine() {
+  if (soundMuted) return;
+  initAudio();
+  if (!audioCtx) return;
+  stopEngine();
+
+  engineGain = audioCtx.createGain();
+  engineGain.gain.value = 0.10; // começa já audível
+
+  engineFilter = audioCtx.createBiquadFilter();
+  engineFilter.type = 'lowpass';
+  engineFilter.frequency.value = 280;
+  engineFilter.Q.value = 0.9;
+
+  // Oscilador principal (grave)
+  engineOsc1 = audioCtx.createOscillator();
+  engineOsc1.type = 'sawtooth';
+  engineOsc1.frequency.value = 55;
+
+  // Segundo oscilador (mais agudo)
+  engineOsc2 = audioCtx.createOscillator();
+  engineOsc2.type = 'square';
+  engineOsc2.frequency.value = 110;
+
+  // Terceiro oscilador (textura)
+  engineOsc3 = audioCtx.createOscillator();
+  engineOsc3.type = 'triangle';
+  engineOsc3.frequency.value = 82;
+
+  engineOsc1.connect(engineFilter);
+  engineOsc2.connect(engineFilter);
+  engineOsc3.connect(engineFilter);
+  engineFilter.connect(engineGain);
+  engineGain.connect(audioCtx.destination);
+
+  engineOsc1.start();
+  engineOsc2.start();
+  engineOsc3.start();
+
+  currentRPM = 0.42; // já começa "ligado"
+}
+
+function updateEngineSound(gameSpeed, isAccelerating, isBraking) {
+  if (!engineOsc1 || !engineOsc2 || !engineOsc3 || !audioCtx) return;
+
+  const targetRPM = Math.min(1, Math.max(0.22, gameSpeed / 11));
+
+  if (isAccelerating) {
+    currentRPM += (targetRPM - currentRPM) * 0.22;
+  } else if (isBraking) {
+    currentRPM += (0.20 - currentRPM) * 0.22;
+  } else {
+    currentRPM += (targetRPM * 0.85 - currentRPM) * 0.14;
+  }
+
+  currentRPM = Math.max(0.18, Math.min(1.0, currentRPM));
+
+  const baseFreq = 58 + currentRPM * 220;
+  const lag = isAccelerating ? 0.02 : (isBraking ? 0.03 : 0.05);
+
+  engineOsc1.frequency.setTargetAtTime(baseFreq, audioCtx.currentTime, lag);
+  engineOsc2.frequency.setTargetAtTime(baseFreq * 2.02, audioCtx.currentTime, lag);
+  engineOsc3.frequency.setTargetAtTime(baseFreq * 1.48, audioCtx.currentTime, lag);
+
+  const vol = 0.08 + currentRPM * 0.14;
+  engineGain.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.04);
+
+  const filterFreq = 280 + currentRPM * 520;
+  engineFilter.frequency.setTargetAtTime(filterFreq, audioCtx.currentTime, 0.05);
+}
+
+function stopEngine() {
+  if (engineOsc1) { try { engineOsc1.stop(); } catch(e){} engineOsc1 = null; }
+  if (engineOsc2) { try { engineOsc2.stop(); } catch(e){} engineOsc2 = null; }
+  if (engineOsc3) { try { engineOsc3.stop(); } catch(e){} engineOsc3 = null; }
+  if (engineGain) { engineGain.disconnect(); engineGain = null; }
+  if (engineFilter) { engineFilter.disconnect(); engineFilter = null; }
+  currentRPM = 0.2;
+}
+
+function playCollisionSound() {
+  if (soundMuted) return;
+  if (!audioCtx) return;
+  const bufferSize = audioCtx.sampleRate * 0.28;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i/bufferSize, 1.5);
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+  const gainNode = audioCtx.createGain();
+  gainNode.gain.setValueAtTime(0.45, audioCtx.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.28);
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 380;
+  noise.connect(filter);
+  filter.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  noise.start();
+}
+
+function playMelodyNote() {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'square';
+  osc.frequency.value = MELODY[melodyIndex % MELODY.length];
+  melodyIndex++;
+  gain.gain.setValueAtTime(0.035, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.16);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.16);
+  melodyTimer = setTimeout(playMelodyNote, 190);
+}
+
+function startMusic() {
+  if (!audioCtx || soundMuted) return;
+  stopMusic();
+  playMelodyNote();
+}
+
+function stopMusic() {
+  if (melodyTimer) { clearTimeout(melodyTimer); melodyTimer = null; }
+}
+
+function playGameOverSound() {
+  if (!audioCtx || soundMuted) return;
+  stopMusic();
+  stopEngine();
+  const notes = [330, 294, 262, 220, 196];
+  notes.forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.09, audioCtx.currentTime + i * 0.14);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.14 + 0.13);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(audioCtx.currentTime + i * 0.14);
+    osc.stop(audioCtx.currentTime + i * 0.14 + 0.14);
+  });
+}
+
+// ================== CONSTANTES ==================
+const ROAD_LEFT = 95;
+const ROAD_RIGHT = 465;
+const ROAD_W = ROAD_RIGHT - ROAD_LEFT;
+const LANE_W = ROAD_W / 3;
+const LANES = [
+  ROAD_LEFT + LANE_W * 0.5,
+  ROAD_LEFT + LANE_W * 1.5,
+  ROAD_LEFT + LANE_W * 2.5,
+];
+
+// ========== 100 NÍVEIS MUITO DIFÍCEIS E VARIADOS ==========
+const TOTAL_LEVELS = 100;
+const LEVELS = {};
+
+for (let i = 1; i <= TOTAL_LEVELS; i++) {
+  let goalType, goalValue, desc, hard = false;
+
+  // Alternância forte + valores altos
+  if (i % 4 === 1) {
+    // Sobrevivência
+    goalType = "time";
+    goalValue = 55 + Math.floor(i * 2.9) + Math.floor(i / 5) * 8;
+    desc = `Sobreviva ${goalValue}s`;
+  } else if (i % 4 === 2) {
+    // Pontuação média-alta
+    goalType = "score";
+    goalValue = 2800 + i * 320 + Math.floor(i * i * 1.4);
+    desc = `Faça ${goalValue.toLocaleString('pt-BR')} pts`;
+  } else if (i % 4 === 3) {
+    // Sobrevivência mais longa
+    goalType = "time";
+    goalValue = 70 + Math.floor(i * 3.2) + Math.floor(i / 4) * 10;
+    desc = `Sobreviva ${goalValue}s`;
+  } else {
+    // Pontuação muito alta
+    goalType = "score";
+    goalValue = 4000 + i * 380 + Math.floor(i * i * 1.8);
+    desc = `Faça ${goalValue.toLocaleString('pt-BR')} pts`;
+  }
+
+  // Marcar como difícil a partir do nível 8
+  if (i >= 8) hard = true;
+
+  // ===== NÍVEIS ESPECIAIS (bem diferentes e pesados) =====
+  if (i === 1)  { goalType = "time";  goalValue = 50;   desc = "Sobreviva 50s"; hard = false; }
+  if (i === 2)  { goalType = "time";  goalValue = 65;   desc = "Sobreviva 65s"; hard = false; }
+  if (i === 3)  { goalType = "score"; goalValue = 4200; desc = "Faça 4.200 pts"; hard = false; }
+  if (i === 4)  { goalType = "time";  goalValue = 80;   desc = "Sobreviva 80s"; hard = false; }
+  if (i === 5)  { goalType = "score"; goalValue = 6500; desc = "Faça 6.500 pts"; hard = true; }
+
+  if (i === 10) { goalType = "time";  goalValue = 110;  desc = "Sobreviva 110s"; hard = true; }
+  if (i === 15) { goalType = "score"; goalValue = 12000; desc = "Faça 12.000 pts"; hard = true; }
+  if (i === 20) { goalType = "time";  goalValue = 140;  desc = "Sobreviva 140s"; hard = true; }
+  if (i === 25) { goalType = "score"; goalValue = 18000; desc = "Faça 18.000 pts"; hard = true; }
+  if (i === 30) { goalType = "time";  goalValue = 170;  desc = "Sobreviva 170s"; hard = true; }
+  if (i === 35) { goalType = "score"; goalValue = 24000; desc = "Faça 24.000 pts"; hard = true; }
+  if (i === 40) { goalType = "time";  goalValue = 200;  desc = "Sobreviva 200s"; hard = true; }
+  if (i === 50) { goalType = "score"; goalValue = 32000; desc = "Faça 32.000 pts"; hard = true; }
+  if (i === 60) { goalType = "time";  goalValue = 240;  desc = "Sobreviva 240s"; hard = true; }
+  if (i === 70) { goalType = "score"; goalValue = 42000; desc = "Faça 42.000 pts"; hard = true; }
+  if (i === 80) { goalType = "time";  goalValue = 280;  desc = "Sobreviva 280s"; hard = true; }
+  if (i === 90) { goalType = "score"; goalValue = 55000; desc = "Faça 55.000 pts"; hard = true; }
+  if (i === 100){ goalType = "time";  goalValue = 360;  desc = "🏆 FINAL - Sobreviva 360s"; hard = true; }
+
+  LEVELS[i] = { goalType, goalValue, desc, hard };
+}
+
+let state = {};
+let bestScore = 0;
+let currentLevel = 1;
+let animId = null;
+
+// Storage seguro (funciona mesmo em ambientes sandboxed)
+const storage = {
+  get(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  },
+  set(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (e) {
+      // Ambiente sandboxed ou localStorage bloqueado — ignora
+    }
+  }
+};
+
+let highScores = [];
+try {
+  const saved = storage.get('turboRushHighScores');
+  if (saved) highScores = JSON.parse(saved);
+} catch (e) {
+  highScores = [];
+}
+
+let isMultiplayer = false;
+
+function resetState(level = 1, multiplayer = false) {
+  currentLevel = level;
+  isMultiplayer = multiplayer;
+  const levelData = multiplayer 
+    ? { goalType: "time", goalValue: 9999, desc: "Multiplayer" } 
+    : LEVELS[level];
+
+  const basePlayer = {
+    lane: 1,
+    x: LANES[1],
+    y: canvas.height - 110,
+    w: 56,
+    h: 96,
+    moving: false,
+    targetX: LANES[1],
+    signalLeft: false,
+    signalRight: false,
+    signalTimer: 0,
+    lives: 5,
+    invincible: 0,
+    score: 0,
+  };
+
+  return {
+    running: false,
+    paused: false,
+    score: 0,
+    lives: 5,
+    speed: 4.2,
+    gameSpeed: 4.2,
+    spawnTimer: 0,
+    spawnInterval: multiplayer ? 55 : 70,
+    invincible: 0,
+    stripes: [],
+    roadPosts: [],
+    enemies: [],
+    sparks: [],
+    exhaust: [],
+    player: { 
+      ...basePlayer, 
+      color: '#00f0ff',
+      name: 'P1'
+    },
+    player2: multiplayer ? {
+      ...basePlayer,
+      lane: 0,
+      x: LANES[0],
+      targetX: LANES[0],
+      color: '#ff6b35',
+      name: 'P2',
+      y: canvas.height - 110,
+    } : null,
+    keys: { left: false, right: false, up: false, down: false },
+    keys2: { left: false, right: false, up: false, down: false }, // WASD
+    levelData: levelData,
+    levelComplete: false,
+    startTime: Date.now(),
+  };
+}
+
+function showLevelSelect() {
+  overlay.classList.remove('active');
+  levelSelectScreen.classList.remove('hidden');
+}
+
+function backToMenu() {
+  if (expoReturnTimer) { clearTimeout(expoReturnTimer); expoReturnTimer = null; }
+  // Para completamente o jogo
+  if (state) {
+    state.running = false;
+    state.paused = false;
+  }
+  cancelAnimationFrame(animId);
+  animId = null;
+  stopEngine();
+  stopMusic();
+
+  // Esconde todas as telas
+  levelSelectScreen.classList.add('hidden');
+  gameOverScreen.classList.add('hidden');
+  levelCompleteScreen.classList.add('hidden');
+  helpScreen.classList.add('hidden');
+  pauseScreen.classList.add('hidden');
+  if (multiplayerScreen) multiplayerScreen.classList.add('hidden');
+
+  hideHUD();
+  // Mostra o menu principal
+  overlay.classList.add('active');
+}
+
+function toggleHelp() {
+  helpScreen.classList.toggle('hidden');
+}
+
+function togglePause() {
+  if (!state || !state.running) return;
+  state.paused = !state.paused;
+  if (state.paused) {
+    cancelAnimationFrame(animId);
+    state.keys = { left: false, right: false, up: false, down: false };
+    stopEngine();
+    stopMusic();
+    pauseScreen.classList.remove('hidden');
+  } else {
+    pauseScreen.classList.add('hidden');
+    startEngine();
+    startMusic();
+    loop();
+  }
+}
+
+function toggleFullscreen() {
+  const elem = document.getElementById('game-wrapper');
+  if (!elem) return;
+  if (!document.fullscreenElement) {
+    if (elem.requestFullscreen) elem.requestFullscreen();
+    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+    else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    else if (document.msExitFullscreen) document.msExitFullscreen();
+  }
+}
+
+function startLevel(level) {
+  if (expoReturnTimer) { clearTimeout(expoReturnTimer); expoReturnTimer = null; }
+  levelSelectScreen.classList.add('hidden');
+  gameOverScreen.classList.add('hidden');
+  levelCompleteScreen.classList.add('hidden');
+  helpScreen.classList.add('hidden');
+  pauseScreen.classList.add('hidden');
+  if (multiplayerScreen) multiplayerScreen.classList.add('hidden');
+  overlay.classList.remove('active');
+  cancelAnimationFrame(animId);
+  initAudio();
+  startEngine();
+  startMusic();
+  state = resetState(level, false);
+  state.running = true;
+  showHUD();
+  initStripes(state);
+  loop();
+}
+
+function startMultiplayer(name1 = 'Jogador 1', name2 = 'Jogador 2') {
+  // Entra em tela cheia automaticamente
+  const elem = document.getElementById('game-wrapper');
+  if (elem && !document.fullscreenElement) {
+    if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+  }
+
+  levelSelectScreen.classList.add('hidden');
+  gameOverScreen.classList.add('hidden');
+  levelCompleteScreen.classList.add('hidden');
+  helpScreen.classList.add('hidden');
+  pauseScreen.classList.add('hidden');
+  if (multiplayerScreen) multiplayerScreen.classList.add('hidden');
+  overlay.classList.remove('active');
+  cancelAnimationFrame(animId);
+  initAudio();
+  startEngine();
+  startMusic();
+  state = resetState(1, true); // multiplayer = true
+  state.player.name = name1;
+  state.player2.name = name2;
+  state.running = true;
+  showHUD();
+  initStripes(state);
+  loop();
+}
+
+function loop() {
+  if (!state || !state.running || state.paused) return;
+  pollGamepads();          // lê os controles de videogame
+  update(state);
+  draw(state);
+  animId = requestAnimationFrame(loop);
+}
+
+// ================== SUPORTE A CONTROLE (GAMEPAD) ==================
+function pollGamepads() {
+  if (!state || !state.running) return;
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+
+  // Controle 0 → Jogador 1
+  const pad1 = pads[0];
+  if (pad1) {
+    applyGamepad(pad1, state.keys);
+  }
+
+  // Controle 1 → Jogador 2 (só no multiplayer)
+  if (isMultiplayer && state.keys2) {
+    const pad2 = pads[1];
+    if (pad2) {
+      applyGamepad(pad2, state.keys2);
+    }
+  }
+}
+
+function applyGamepad(pad, keysObj) {
+  if (!keysObj._gp) {
+    keysObj._gp = { prevLeft: false, prevRight: false, queued: 0 };
+  }
+
+  const axisX = pad.axes[0] || 0;
+  const dpadLeft  = !!(pad.buttons[14] && pad.buttons[14].pressed);
+  const dpadRight = !!(pad.buttons[15] && pad.buttons[15].pressed);
+  const dpadUp    = !!(pad.buttons[12] && pad.buttons[12].pressed);
+  const dpadDown  = !!(pad.buttons[13] && pad.buttons[13].pressed);
+
+  // L1/LB e R1/RB — troca de faixa rápida
+  const lb = !!(pad.buttons[4] && pad.buttons[4].pressed);
+  const rb = !!(pad.buttons[5] && pad.buttons[5].pressed);
+
+  const btnA = !!(pad.buttons[0] && pad.buttons[0].pressed);
+  const btnB = !!(pad.buttons[1] && pad.buttons[1].pressed);
+  const lt = !!(pad.buttons[6] && pad.buttons[6].value > 0.15);
+  const rt = !!(pad.buttons[7] && pad.buttons[7].value > 0.12);
+
+  // Zona morta menor = responde mais rápido
+  const leftNow  = axisX < -0.22 || dpadLeft || lb;
+  const rightNow = axisX >  0.22 || dpadRight || rb;
+
+  // Toque rápido no analógico / botão já entra na fila
+  if (leftNow && !keysObj._gp.prevLeft) keysObj._gp.queued = -1;
+  if (rightNow && !keysObj._gp.prevRight) keysObj._gp.queued = 1;
+  keysObj._gp.prevLeft = leftNow;
+  keysObj._gp.prevRight = rightNow;
+
+  keysObj.left  = leftNow;
+  keysObj.right = rightNow;
+  keysObj.up    = btnA || rt || dpadUp;
+  keysObj.down  = btnB || lt || dpadDown;
+}
+
+function movePlayerLane(p, keys) {
+  const queued = keys._gp ? keys._gp.queued : 0;
+  const wantLeft = keys.left || queued === -1;
+  const wantRight = keys.right || queued === 1;
+
+  if (!p.moving) {
+    if (wantLeft && p.lane > 0) {
+      p.lane--;
+      p.moving = true;
+      p.targetX = LANES[p.lane];
+      p.signalLeft = true;
+      p.signalRight = false;
+      p.signalTimer = 40;
+      if (keys._gp) keys._gp.queued = 0;
+    } else if (wantRight && p.lane < 2) {
+      p.lane++;
+      p.moving = true;
+      p.targetX = LANES[p.lane];
+      p.signalRight = true;
+      p.signalLeft = false;
+      p.signalTimer = 40;
+      if (keys._gp) keys._gp.queued = 0;
+    }
+  }
+
+  if (p.signalTimer > 0) {
+    p.signalTimer--;
+    if (p.signalTimer <= 0) { p.signalLeft = false; p.signalRight = false; }
+  }
+
+  const dx = p.targetX - p.x;
+  if (Math.abs(dx) < 2) {
+    p.x = p.targetX;
+    p.moving = false;
+  } else {
+    p.x += dx * 0.38; // troca de faixa mais rápida (controle não fica lento)
+  }
+}
+
+function update(s) {
+  const p = s.player;
+  const levelData = s.levelData;
+
+  s.score += Math.ceil(s.gameSpeed * 0.12);
+  s.gameSpeed += 0.0014;           // velocidade sobe um pouco mais rápido
+  s.speed = s.gameSpeed;
+
+  if (s.keys.up && s.gameSpeed < 13) s.gameSpeed += 0.045;
+  if (s.keys.down && s.gameSpeed > 1) s.gameSpeed -= 0.07;
+
+  // Modo Infinity
+  if (levelData.goalType === "infinity") {
+    const elapsed = (Date.now() - s.startTime) / 1000;
+    if (elapsed > 15 && s.gameSpeed < 9) s.gameSpeed += 0.0005;
+    if (elapsed > 30) s.spawnInterval = Math.max(18, s.spawnInterval - 0.01);
+  }
+
+  // Aceleração do P1
+  if (s.keys.up && Math.random() < 0.55) {
+    addExhaust(s, p.x, p.y);
+  }
+
+  // ===== JOGADOR 1 =====
+  movePlayerLane(p, s.keys);
+
+  // ===== JOGADOR 2 (WASD / Controle 2) =====
+  if (isMultiplayer && s.player2) {
+    const p2 = s.player2;
+    if (s.keys2.up && Math.random() < 0.55) addExhaust(s, p2.x, p2.y);
+    movePlayerLane(p2, s.keys2);
+  }
+
+  s.stripes.forEach(st => {
+    st.y += s.speed;
+    if (st.y > canvas.height) st.y -= canvas.height + 30;
+  });
+
+  // Postes laterais se movem com a estrada
+  s.roadPosts.forEach(post => {
+    post.y += s.speed * 1.05;
+    if (post.y > canvas.height + 60) post.y -= canvas.height + 180;
+  });
+
+  s.spawnTimer++;
+  if (s.spawnTimer >= s.spawnInterval) {
+    spawnEnemy(s);
+    s.spawnTimer = 0;
+    // Inimigos aparecem cada vez mais rápido
+    s.spawnInterval = Math.max(16, s.spawnInterval - 0.55);
+  }
+
+  s.enemies.forEach(e => { e.y += s.speed * 0.9; });
+  s.enemies = s.enemies.filter(e => e.y < canvas.height + 100);
+
+  // Colisão Jogador 1
+  if (p.invincible > 0) {
+    p.invincible--;
+  } else {
+    for (const e of s.enemies) {
+      if (rectsOverlap(p, e)) {
+        p.lives--;
+        s.lives = p.lives; // mantém compatibilidade
+        p.invincible = 90;
+        addSparks(s, p.x, p.y);
+        playCollisionSound();
+        s.enemies = s.enemies.filter(en => en !== e);
+        if (p.lives <= 0) {
+          endGame(s, false);
+          return;
+        }
+        break;
+      }
+    }
+  }
+
+  // Colisão Jogador 2 (multiplayer)
+  if (isMultiplayer && s.player2) {
+    const p2 = s.player2;
+    if (p2.invincible > 0) {
+      p2.invincible--;
+    } else {
+      for (const e of s.enemies) {
+        if (rectsOverlap(p2, e)) {
+          p2.lives--;
+          p2.invincible = 90;
+          addSparks(s, p2.x, p2.y);
+          playCollisionSound();
+          s.enemies = s.enemies.filter(en => en !== e);
+          if (p2.lives <= 0) {
+            endGame(s, false);
+            return;
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  s.sparks.forEach(sp => {
+    sp.x += sp.vx;
+    sp.y += sp.vy;
+    sp.vy += 0.15;
+    sp.life--;
+  });
+  s.sparks = s.sparks.filter(sp => sp.life > 0);
+
+  s.exhaust.forEach(ex => {
+    ex.x += ex.vx;
+    ex.y += ex.vy;
+    ex.life--;
+  });
+  s.exhaust = s.exhaust.filter(ex => ex.life > 0);
+
+  speedDisplay.textContent = Math.floor(s.gameSpeed * 18);
+  scoreDisplay.textContent = s.score;
+
+  if (isMultiplayer && s.player2) {
+    const n1 = (s.player.name || 'P1').substring(0, 8);
+    const n2 = (s.player2.name || 'P2').substring(0, 8);
+    livesDisplay.textContent = `${n1} ${'❤️'.repeat(s.player.lives)}  |  ${n2} ${'❤️'.repeat(s.player2.lives)}`;
+  } else {
+    livesDisplay.textContent = '❤️'.repeat(s.player.lives || s.lives);
+  }
+
+  // Passa se está acelerando ou freando para o som reagir de verdade
+  const anyAccel = s.keys.up || (isMultiplayer && s.keys2 && s.keys2.up);
+  const anyBrake = s.keys.down || (isMultiplayer && s.keys2 && s.keys2.down);
+  updateEngineSound(s.gameSpeed, anyAccel, anyBrake);
+  checkLevelComplete(s);
+}
+
+function checkLevelComplete(s) {
+  const ld = s.levelData;
+  if (ld.goalType === "infinity") return;
+  let done = false;
+  if (ld.goalType === "time" && Math.floor((Date.now() - s.startTime) / 1000) >= ld.goalValue) done = true;
+  if (ld.goalType === "score" && s.score >= ld.goalValue) done = true;
+  if (done && !s.levelComplete) {
+    s.levelComplete = true;
+    endGame(s, true);
+  }
+}
+
+function endGame(s, levelCompleted) {
+  s.running = false;
+  stopEngine();
+  stopMusic();
+  levelCompleteScreen.classList.add('hidden');
+  gameOverScreen.classList.add('hidden');
+  helpScreen.classList.add('hidden');
+  pauseScreen.classList.add('hidden');
+
+  if (levelCompleted) {
+    document.getElementById('levelScore').textContent = s.score;
+    document.getElementById('levelTime').textContent = Math.floor((Date.now() - s.startTime) / 1000);
+    levelCompleteScreen.classList.remove('hidden');
+    saveScore(s.score);
+  } else {
+    const isInfinity = s.levelData.goalType === "infinity";
+    const survivalTime = Math.floor((Date.now() - s.startTime) / 1000);
+    if (isInfinity) {
+      let infinityBest = parseInt(storage.get('infinityBestTime')) || 0;
+      if (survivalTime > infinityBest) {
+        infinityBest = survivalTime;
+        storage.set('infinityBestTime', infinityBest);
+      }
+      finalScoreEl.textContent = survivalTime + "s";
+      bestScoreEl.textContent = infinityBest + "s";
+    } else {
+      if (s.score > bestScore) bestScore = s.score;
+      finalScoreEl.textContent = s.score;
+      bestScoreEl.textContent = bestScore;
+    }
+    playGameOverSound();
+    displayRanking();
+    const goName = document.getElementById('goPlayerName');
+    if (goName) {
+      if (isMultiplayer && s.player2) {
+        goName.textContent = `${s.player.name}  vs  ${s.player2.name}`;
+      } else {
+        goName.textContent = s.player.name ? s.player.name : '';
+      }
+    }
+    gameOverScreen.classList.remove('hidden');
+    saveScore(s.score);
+
+    // Exposição: volta sozinho ao menu depois de 20s
+    if (expoReturnTimer) clearTimeout(expoReturnTimer);
+    expoReturnTimer = setTimeout(() => {
+      backToMenu();
+    }, 20000);
+  }
+}
+
+function restartGame() { startLevel(currentLevel); }
+function goToNextLevel() { 
+  startLevel(currentLevel < TOTAL_LEVELS ? currentLevel + 1 : 1); 
+}
+
+function draw(s) {
+  const p = s.player;
+
+  // ===== FUNDO / GRAMA COM DETALHE =====
+  ctx.fillStyle = '#162015';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Céu / horizonte no topo
+  const sky = ctx.createLinearGradient(0, 0, 0, 70);
+  sky.addColorStop(0, '#0b1228');
+  sky.addColorStop(1, 'rgba(22,32,21,0)');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, canvas.width, 70);
+
+  // Grama esquerda e direita com linhas de textura
+  ctx.fillStyle = '#1e2c1a';
+  ctx.fillRect(0, 0, ROAD_LEFT - 8, canvas.height);
+  ctx.fillRect(ROAD_RIGHT + 8, 0, canvas.width - ROAD_RIGHT - 8, canvas.height);
+
+  // Linhas de textura na grama
+  ctx.strokeStyle = '#243520';
+  ctx.lineWidth = 1;
+  for (let y = 0; y < canvas.height; y += 18) {
+    const offset = (y + s.speed * 3) % 18;
+    ctx.beginPath();
+    ctx.moveTo(4, y - offset);
+    ctx.lineTo(ROAD_LEFT - 14, y - offset + 8);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(ROAD_RIGHT + 14, y - offset);
+    ctx.lineTo(canvas.width - 4, y - offset + 8);
+    ctx.stroke();
+  }
+
+  // ===== ASFALTO =====
+  ctx.fillStyle = '#1a1c22';
+  ctx.fillRect(ROAD_LEFT, 0, ROAD_W, canvas.height);
+
+  // Brilho / reflexo no centro do asfalto (mais forte em alta velocidade)
+  if (s.gameSpeed > 4) {
+    const shineAlpha = Math.min(0.12, (s.gameSpeed - 4) * 0.015);
+    const gradient = ctx.createLinearGradient(ROAD_LEFT, 0, ROAD_RIGHT, 0);
+    gradient.addColorStop(0, 'rgba(255,255,255,0)');
+    gradient.addColorStop(0.5, `rgba(180,200,255,${shineAlpha})`);
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(ROAD_LEFT, 0, ROAD_W, canvas.height);
+  }
+
+  // ===== GUARDRAILS (barreiras laterais de metal) =====
+  // Cor mais metálica e visível
+  // Lado esquerdo
+  ctx.fillStyle = '#5a6270';
+  ctx.fillRect(ROAD_LEFT - 11, 0, 9, canvas.height);
+  ctx.fillStyle = '#8a93a3';
+  ctx.fillRect(ROAD_LEFT - 10, 0, 3, canvas.height);
+  // Lado direito
+  ctx.fillStyle = '#5a6270';
+  ctx.fillRect(ROAD_RIGHT + 2, 0, 9, canvas.height);
+  ctx.fillStyle = '#8a93a3';
+  ctx.fillRect(ROAD_RIGHT + 7, 0, 3, canvas.height);
+
+  // Postes dos guardrails (mais visíveis)
+  ctx.fillStyle = '#4a5160';
+  for (let y = 0; y < canvas.height; y += 48) {
+    const yy = (y + (s.speed * 2.2) % 48);
+    ctx.fillRect(ROAD_LEFT - 13, yy, 13, 7);
+    ctx.fillRect(ROAD_RIGHT, yy, 13, 7);
+  }
+
+  // ===== LINHA CENTRAL AMARELA DUPLA =====
+  const centerX = ROAD_LEFT + ROAD_W / 2;
+  ctx.strokeStyle = '#ffe800';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(centerX - 5, 0);
+  ctx.lineTo(centerX - 5, canvas.height);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(centerX + 5, 0);
+  ctx.lineTo(centerX + 5, canvas.height);
+  ctx.stroke();
+
+  // ===== FAIXAS TRACEJADAS BRANCAS (mais grossas e com brilho) =====
+  ctx.strokeStyle = '#e8e8e8';
+  ctx.lineWidth = 4;
+  ctx.setLineDash([28, 22]);
+  s.stripes.forEach(st => {
+    // Faixa entre lane 0 e 1
+    ctx.beginPath();
+    ctx.moveTo(ROAD_LEFT + LANE_W, st.y - 28);
+    ctx.lineTo(ROAD_LEFT + LANE_W, st.y);
+    ctx.stroke();
+    // Faixa entre lane 1 e 2
+    ctx.beginPath();
+    ctx.moveTo(ROAD_LEFT + LANE_W * 2, st.y - 28);
+    ctx.lineTo(ROAD_LEFT + LANE_W * 2, st.y);
+    ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  ctx.shadowBlur = 0;
+
+  // ===== POSTES DE LUZ / ELEMENTOS LATERAIS (mais visíveis) =====
+  s.roadPosts.forEach(post => {
+    const isLeft = post.side === 'left';
+    const px = isLeft ? ROAD_LEFT - 32 : ROAD_RIGHT + 20;
+
+    // Poste principal (mais grosso)
+    ctx.fillStyle = '#3a4050';
+    ctx.fillRect(px, post.y, 7, 46);
+
+    // Detalhe do poste
+    ctx.fillStyle = '#555e70';
+    ctx.fillRect(px + 2, post.y, 3, 46);
+
+    ctx.fillStyle = '#fff4b0';
+    ctx.beginPath();
+    ctx.arc(px + 3.5, post.y + 6, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(px + 3.5, post.y + 6, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Base do poste
+    ctx.fillStyle = '#2a2e38';
+    ctx.fillRect(px - 3, post.y + 44, 13, 6);
+
+    // Árvores simples nas laterais
+    const treeX = isLeft ? 28 : canvas.width - 42;
+    ctx.fillStyle = '#3a2a18';
+    ctx.fillRect(treeX + 8, post.y + 18, 6, 22);
+    ctx.fillStyle = '#1f4a22';
+    ctx.beginPath();
+    ctx.arc(treeX + 11, post.y + 14, 14, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Placas (a cada outro poste)
+    if (Math.floor(post.y) % 280 < 140) {
+      const sx = isLeft ? ROAD_LEFT - 52 : ROAD_RIGHT + 28;
+      ctx.fillStyle = '#2a2a2a';
+      ctx.fillRect(sx + 10, post.y + 8, 4, 28);
+      ctx.fillStyle = '#1a4a8a';
+      ctx.fillRect(sx, post.y, 24, 16);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 9px Arial';
+      ctx.fillText('→', sx + 7, post.y + 12);
+    }
+  });
+
+  // ===== LINHAS DE VELOCIDADE (mais estilizadas) =====
+  if (s.gameSpeed > 5.5) {
+    const intensity = Math.min(1, (s.gameSpeed - 5.5) / 6);
+    ctx.strokeStyle = `rgba(255,255,255,${0.25 + intensity * 0.35})`;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 8; i++) {
+      const yPos = ((Date.now() / 18 + i * 38) % (canvas.height + 90)) - 40;
+      const len = 18 + intensity * 12;
+      // Esquerda
+      ctx.beginPath();
+      ctx.moveTo(ROAD_LEFT - 22, yPos);
+      ctx.lineTo(ROAD_LEFT - 8, yPos + len);
+      ctx.stroke();
+      // Direita
+      ctx.beginPath();
+      ctx.moveTo(ROAD_RIGHT + 8, yPos);
+      ctx.lineTo(ROAD_RIGHT + 22, yPos + len);
+      ctx.stroke();
+    }
+  }
+
+  // Inimigos
+  s.enemies.forEach(e => drawCar(e.x, e.y, e.w, e.h, e.color, false, false, false));
+
+  // Exhaust
+  s.exhaust.forEach(ex => {
+    const alpha = ex.life / ex.maxLife;
+    ctx.globalAlpha = alpha * 0.6;
+    ctx.fillStyle = '#aaaaaa';
+    ctx.beginPath();
+    ctx.arc(ex.x, ex.y, ex.size * alpha, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  // Jogador 1
+  const inv1 = p.invincible || 0;
+  const visible1 = inv1 === 0 || Math.floor(inv1 / 6) % 2 === 0;
+  if (visible1) {
+    drawCar(p.x, p.y, p.w || 56, p.h || 96, p.color || '#00f0ff', true, p.signalLeft, p.signalRight);
+  }
+
+  // Jogador 2 (multiplayer)
+  if (isMultiplayer && s.player2) {
+    const p2 = s.player2;
+    const visible2 = p2.invincible === 0 || Math.floor(p2.invincible / 6) % 2 === 0;
+    if (visible2) {
+      drawCar(p2.x, p2.y, p2.w, p2.h, p2.color || '#ff6b35', true, p2.signalLeft, p2.signalRight);
+    }
+  }
+
+  // Sparks
+  s.sparks.forEach(sp => {
+    const alpha = sp.life / sp.maxLife;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = sp.color;
+    ctx.beginPath();
+    ctx.arc(sp.x, sp.y, 3 * alpha, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+// ================== DESENHO DO CARRO MELHORADO ==================
+function shadeColor(hex, amt) {
+  let c = hex.replace('#', '');
+  if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+  const num = parseInt(c, 16);
+  let r = Math.min(255, Math.max(0, (num >> 16) + amt));
+  let g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + amt));
+  let b = Math.min(255, Math.max(0, (num & 0xff) + amt));
+  return `rgb(${r},${g},${b})`;
+}
+
+function drawWheel(wx, wy, ww, wh) {
+  ctx.fillStyle = '#111';
+  roundRect(wx, wy, ww, wh, 3); ctx.fill();
+  ctx.fillStyle = '#3a3a40';
+  roundRect(wx + 2, wy + 3, ww - 4, wh - 6, 2); ctx.fill();
+  ctx.fillStyle = '#888';
+  ctx.fillRect(wx + ww * 0.35, wy + 4, ww * 0.3, wh - 8);
+}
+
+function drawCar(x, y, w, h, color, isPlayer, signalLeft = false, signalRight = false) {
+  const cx = x - w / 2;
+  const cy = y - h / 2;
+  const wheelW = Math.max(7, w * 0.17);
+  const wheelH = Math.max(12, h * 0.18);
+  const lightW = Math.max(7, w * 0.20);
+  const lightH = Math.max(4, h * 0.06);
+
+  // Sombra
+  ctx.fillStyle = 'rgba(0,0,0,0.38)';
+  ctx.beginPath();
+  ctx.ellipse(x + 1, cy + h + 1, w * 0.40, 7, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Cone de luz
+  if (isPlayer) {
+    const cone = ctx.createLinearGradient(x, cy - 70, x, cy + 6);
+    cone.addColorStop(0, 'rgba(255,245,180,0)');
+    cone.addColorStop(0.7, 'rgba(255,245,180,0.08)');
+    cone.addColorStop(1, 'rgba(255,245,180,0.22)');
+    ctx.fillStyle = cone;
+    ctx.beginPath();
+    ctx.moveTo(cx + 10, cy + 8);
+    ctx.lineTo(x - w * 0.85, cy - 70);
+    ctx.lineTo(x + w * 0.85, cy - 70);
+    ctx.lineTo(cx + w - 10, cy + 8);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Corpo com degradê
+  const body = ctx.createLinearGradient(cx, cy, cx + w, cy);
+  body.addColorStop(0, shadeColor(color, -40));
+  body.addColorStop(0.22, shadeColor(color, 25));
+  body.addColorStop(0.5, color);
+  body.addColorStop(0.78, shadeColor(color, 20));
+  body.addColorStop(1, shadeColor(color, -45));
+  ctx.fillStyle = body;
+  roundRect(cx + 3, cy + 5, w - 6, h - 10, Math.min(10, w * 0.16));
+  ctx.fill();
+
+  // Para-choque dianteiro
+  ctx.fillStyle = shadeColor(color, -55);
+  roundRect(cx + 6, cy + 3, w - 12, 7, 3);
+  ctx.fill();
+
+  // Grade
+  ctx.fillStyle = '#1a1a1a';
+  roundRect(cx + w * 0.32, cy + 5, w * 0.36, 5, 1);
+  ctx.fill();
+
+  // Linha do capô
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx + 8, cy + h * 0.18);
+  ctx.lineTo(cx + w - 8, cy + h * 0.18);
+  ctx.stroke();
+
+  // Cabine
+  const cabinW = w * 0.68;
+  const cabinH = h * 0.32;
+  const cabinX = cx + (w - cabinW) / 2;
+  const cabinY = cy + h * 0.24;
+  ctx.fillStyle = isPlayer ? '#031820' : '#0c0c14';
+  roundRect(cabinX, cabinY, cabinW, cabinH, 5);
+  ctx.fill();
+
+  // Vidro dianteiro
+  const glass = ctx.createLinearGradient(cabinX, cabinY, cabinX, cabinY + cabinH);
+  glass.addColorStop(0, isPlayer ? 'rgba(160,230,255,0.55)' : 'rgba(180,200,220,0.28)');
+  glass.addColorStop(1, isPlayer ? 'rgba(0,80,120,0.45)' : 'rgba(20,30,50,0.4)');
+  ctx.fillStyle = glass;
+  roundRect(cabinX + 3, cabinY + 2, cabinW - 6, cabinH * 0.48, 3);
+  ctx.fill();
+
+  // Vidro traseiro
+  ctx.fillStyle = isPlayer ? 'rgba(0,40,60,0.55)' : 'rgba(20,20,30,0.5)';
+  roundRect(cabinX + 5, cabinY + cabinH * 0.58, cabinW - 10, cabinH * 0.32, 2);
+  ctx.fill();
+
+  // Brilho no vidro
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.fillRect(cabinX + 6, cabinY + 4, cabinW * 0.28, 3);
+
+  // Retrovisores
+  ctx.fillStyle = shadeColor(color, -20);
+  ctx.fillRect(cx + 1, cabinY + 4, 5, 6);
+  ctx.fillRect(cx + w - 6, cabinY + 4, 5, 6);
+
+  // Rodas com aro
+  drawWheel(cx - 1, cy + h * 0.13, wheelW, wheelH);
+  drawWheel(cx + w - wheelW + 1, cy + h * 0.13, wheelW, wheelH);
+  drawWheel(cx - 1, cy + h - wheelH - h * 0.10, wheelW, wheelH);
+  drawWheel(cx + w - wheelW + 1, cy + h - wheelH - h * 0.10, wheelW, wheelH);
+
+  // Faróis
+  ctx.fillStyle = isPlayer ? '#fff8d0' : '#ffe9a0';
+  roundRect(cx + 6, cy + 4, lightW, lightH, 2); ctx.fill();
+  roundRect(cx + w - 6 - lightW, cy + 4, lightW, lightH, 2); ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(cx + 8, cy + 5, lightW * 0.4, 2);
+  ctx.fillRect(cx + w - 6 - lightW + 2, cy + 5, lightW * 0.4, 2);
+
+  // Setas
+  const blink = Math.floor(Date.now() / 160) % 2 === 0;
+  if (isPlayer && signalLeft && blink) {
+    ctx.fillStyle = '#ffbb22';
+    roundRect(cx, cy + 11, 8, 7, 2); ctx.fill();
+  }
+  if (isPlayer && signalRight && blink) {
+    ctx.fillStyle = '#ffbb22';
+    roundRect(cx + w - 8, cy + 11, 8, 7, 2); ctx.fill();
+  }
+
+  // Para-choque traseiro
+  ctx.fillStyle = shadeColor(color, -60);
+  roundRect(cx + 7, cy + h - 10, w - 14, 6, 2);
+  ctx.fill();
+
+  // Lanternas
+  ctx.fillStyle = '#ff2a4a';
+  roundRect(cx + 7, cy + h - 11, lightW, lightH, 2); ctx.fill();
+  roundRect(cx + w - 7 - lightW, cy + h - 11, lightW, lightH, 2); ctx.fill();
+  ctx.fillStyle = '#ff8899';
+  ctx.fillRect(cx + 9, cy + h - 10, lightW * 0.35, 2);
+  ctx.fillRect(cx + w - 7 - lightW + 2, cy + h - 10, lightW * 0.35, 2);
+}
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function rectsOverlap(a, b) {
+  const p = 6;
+  return (
+    a.x - a.w/2 + p < b.x + b.w/2 - p &&
+    a.x + a.w/2 - p > b.x - b.w/2 + p &&
+    a.y - a.h/2 + p < b.y + b.h/2 - p &&
+    a.y + a.h/2 - p > b.y - b.h/2 + p
+  );
+}
+
+function initStripes(s) {
+  s.stripes = [];
+  for (let y = 0; y < canvas.height; y += 55) {
+    s.stripes.push({ y });
+  }
+
+  // Postes de luz / elementos laterais
+  s.roadPosts = [];
+  for (let y = -40; y < canvas.height + 100; y += 140) {
+    s.roadPosts.push({ y, side: 'left' });
+    s.roadPosts.push({ y: y + 70, side: 'right' });
+  }
+}
+
+const ENEMY_COLORS = ['#e63946','#f4a261','#2ec4b6','#a8dadc','#ffbe0b','#8338ec','#fb5607'];
+function randColor() {
+  return ENEMY_COLORS[Math.floor(Math.random() * ENEMY_COLORS.length)];
+}
+
+function spawnEnemy(s) {
+  const lane = Math.floor(Math.random() * 3);
+  const roll = Math.random();
+  let w = 52, h = 88;
+  if (roll < 0.16) { w = 58; h = 108; }      // caminhão
+  else if (roll < 0.36) { w = 46; h = 76; }  // carro pequeno
+  s.enemies.push({
+    x: LANES[lane],
+    y: -110,
+    w, h,
+    lane,
+    color: randColor(),
+    speed: s.gameSpeed * (0.7 + Math.random() * 0.5),
+  });
+}
+
+function addSparks(s, x, y) {
+  for (let i = 0; i < 18; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const vel = 2 + Math.random() * 4;
+    s.sparks.push({
+      x, y,
+      vx: Math.cos(angle) * vel,
+      vy: Math.sin(angle) * vel,
+      life: 30 + Math.random() * 20,
+      maxLife: 50,
+      color: ['#ffe800','#ff6600','#ff2244'][Math.floor(Math.random()*3)],
+    });
+  }
+}
+
+function addExhaust(s, x, y) {
+  for (let i = 0; i < 3; i++) {
+    s.exhaust.push({
+      x: x + (Math.random() - 0.5) * 8,
+      y: y + 28 + Math.random() * 5,
+      vx: (Math.random() - 0.5) * 0.8,
+      vy: 1.5 + Math.random() * 0.8,
+      life: 20 + Math.random() * 15,
+      maxLife: 35,
+      size: 2 + Math.random() * 2,
+    });
+  }
+}
+
+window.addEventListener('keydown', e => {
+  if (e.key === 'F1') {
+    e.preventDefault();
+    toggleHelp();
+    return;
+  }
+  if (e.key.toLowerCase() === 'p' || e.key === 'Escape') {
+    e.preventDefault();
+    togglePause();
+    return;
+  }
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','a','A','d','D','w','W','s','S'].includes(e.key)) {
+    e.preventDefault();
+  }
+  if (!state || !state.running || state.paused) return;
+
+  // Jogador 1 - Setas
+  if (e.key === 'ArrowLeft') state.keys.left = true;
+  if (e.key === 'ArrowRight') state.keys.right = true;
+  if (e.key === 'ArrowUp') state.keys.up = true;
+  if (e.key === 'ArrowDown') state.keys.down = true;
+
+  // Jogador 2 - WASD (só no multiplayer)
+  if (isMultiplayer && state.keys2) {
+    if (e.key === 'a' || e.key === 'A') state.keys2.left = true;
+    if (e.key === 'd' || e.key === 'D') state.keys2.right = true;
+    if (e.key === 'w' || e.key === 'W') state.keys2.up = true;
+    if (e.key === 's' || e.key === 'S') state.keys2.down = true;
+  }
+});
+
+window.addEventListener('keyup', e => {
+  if (!state) return;
+  if (e.key === 'ArrowLeft') state.keys.left = false;
+  if (e.key === 'ArrowRight') state.keys.right = false;
+  if (e.key === 'ArrowUp') state.keys.up = false;
+  if (e.key === 'ArrowDown') state.keys.down = false;
+
+  if (isMultiplayer && state.keys2) {
+    if (e.key === 'a' || e.key === 'A') state.keys2.left = false;
+    if (e.key === 'd' || e.key === 'D') state.keys2.right = false;
+    if (e.key === 'w' || e.key === 'W') state.keys2.up = false;
+    if (e.key === 's' || e.key === 'S') state.keys2.down = false;
+  }
+});
+
+function saveScore(score) {
+  highScores.push(score);
+  highScores.sort((a, b) => b - a);
+  highScores = highScores.slice(0, 5);
+  storage.set('turboRushHighScores', JSON.stringify(highScores));
+}
+
+function displayRanking() {
+  const container = document.getElementById('rankingDisplay');
+  if (!container) return;
+  if (highScores.length === 0) {
+    container.innerHTML = "<p style='color:#888'>Nenhuma pontuação ainda</p>";
+    return;
+  }
+  let html = "<h4>🏆 MELHORES PONTUAÇÕES</h4><ol>";
+  highScores.forEach((score, index) => {
+    html += `<li>${index + 1}. ${score} pontos</li>`;
+  });
+  html += "</ol>";
+  container.innerHTML = html;
+}
+  </script>
+</body>
+</html>
